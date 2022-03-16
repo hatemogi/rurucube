@@ -1,75 +1,32 @@
-enum Color {
-  W, Y, B, G, R, O, VOID
-}
-
-type Cell = {
-  up: Color,
-  down: Color,
-  left: Color,
-  right: Color,
-  front: Color,
-  back: Color
-}
-
-const voidCell: Cell = {
-  up: Color.VOID, down: Color.VOID,
-  left: Color.VOID, right: Color.VOID,
-  front: Color.VOID, back: Color.VOID
+enum FaceColor {
+  WHITE, YELLOW, BLUE, GREEN, RED, ORANGE
 };
 
-type Layer = [Cell, Cell, Cell,
-              Cell, Cell, Cell,
-              Cell, Cell, Cell];
+type Face = [ FaceColor, FaceColor, FaceColor,
+              FaceColor, FaceColor, FaceColor,
+              FaceColor, FaceColor, FaceColor ];
 
-type Cube = [Layer, Layer, Layer];
+type Cube = {
+  front: Face,
+  back: Face,
+  up: Face,
+  down: Face,
+  left: Face,
+  right: Face
+};
 
-const defaultLayer0: Layer = [
-  { ...voidCell, front: Color.B, left: Color.R, down: Color.Y },
-  { ...voidCell, front: Color.B, down: Color.Y },
-  { ...voidCell, front: Color.B, right: Color.O, down: Color.Y },
-
-  { ...voidCell, left: Color.R, down: Color.Y },
-  { ...voidCell, down: Color.Y },
-  { ...voidCell, right: Color.O, down: Color.Y },
-
-  { ...voidCell, back: Color.G, left: Color.R, down: Color.Y },
-  { ...voidCell, back: Color.G, down: Color.Y },
-  { ...voidCell, back: Color.G, right: Color.O, down: Color.Y }
+const [W, Y, B, G, R, O] = [
+  FaceColor.WHITE, FaceColor.YELLOW, FaceColor.BLUE,
+  FaceColor.GREEN, FaceColor.RED,    FaceColor.ORANGE
 ];
 
-const defaultLayer1: Layer = [
-  { ...voidCell, front: Color.B, left: Color.R, },
-  { ...voidCell, front: Color.B },
-  { ...voidCell, front: Color.B, right: Color.O },
+const defaultCube: Cube = {
+  front: [ B,B,B, B,B,B, B,B,B ],
+  back:  [ G,G,G, G,G,G, G,G,G ],
+  up:    [ W,W,W, W,W,W, W,W,W ],
+  down:  [ Y,Y,Y, Y,Y,Y, Y,Y,Y ],
+  left:  [ R,R,R, R,R,R, R,R,R ],
+  right: [ O,O,O, O,O,O, O,O,O ]
+};
 
-  { ...voidCell, left: Color.R },
-  { ...voidCell },
-  { ...voidCell, right: Color.O },
-
-  { ...voidCell, back: Color.G, left: Color.R },
-  { ...voidCell, back: Color.G },
-  { ...voidCell, back: Color.G, right: Color.O }
-];
-
-const defaultLayer2: Layer = [
-  { ...voidCell, front: Color.B, left: Color.R, up: Color.W },
-  { ...voidCell, front: Color.B, up: Color.W },
-  { ...voidCell, front: Color.B, right: Color.O, up: Color.W },
-
-  { ...voidCell, left: Color.R, up: Color.W },
-  { ...voidCell, up: Color.W },
-  { ...voidCell, right: Color.O, up: Color.W },
-
-  { ...voidCell, back: Color.G, left: Color.R, up: Color.W },
-  { ...voidCell, back: Color.G, up: Color.W },
-  { ...voidCell, back: Color.G, right: Color.O, up: Color.W }
-];
-
-
-const defaultCube: Cube = [
-  defaultLayer0,
-  defaultLayer1,
-  defaultLayer2
-];
-
-export { Color, Cell, Layer, Cube, defaultCube };
+export { FaceColor, Face, Cube, defaultCube };
