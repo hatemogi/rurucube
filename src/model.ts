@@ -7,12 +7,12 @@ type Face = [ FaceColor, FaceColor, FaceColor,
               FaceColor, FaceColor, FaceColor ];
 
 type Cube = {
-  front: Face,
-  back: Face,
-  up: Face,
-  down: Face,
-  left: Face,
-  right: Face
+  front : Face,
+  back  : Face,
+  up    : Face,
+  down  : Face,
+  left  : Face,
+  right : Face
 };
 
 const [W, Y, B, G, R, O] = [
