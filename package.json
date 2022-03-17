@@ -5,15 +5,20 @@
   "main": "index.js",
   "scripts": {
     "start": "webpack && webpack-dev-server --mode development",
-    "build": "webpack"
+    "build": "webpack",
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/preset-typescript": "^7.16.7",
+    "@types/jest": "^27.4.1",
     "@types/three": "^0.138.0",
     "copy-webpack-plugin": "^10.2.4",
     "elm-live": "^4.0.2",
     "elm-webpack-loader": "^8.0.0",
+    "jest": "^27.5.1",
+    "ts-jest": "^27.1.3",
     "ts-loader": "^9.2.8",
     "typescript": "^4.6.2",
     "webpack": "^5.70.0",

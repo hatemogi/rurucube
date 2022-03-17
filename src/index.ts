@@ -21,12 +21,12 @@ controls.minDistance = 10;
 controls.maxDistance = 30;
 
 const CELL_SIZE = 2;
-const CELL_DISTANCE = CELL_SIZE * 1.05
+const CELL_DISTANCE = CELL_SIZE * 1.03
 
 function cubeToMeshes(cube: Model.Cube): THREE.Mesh[] {
   const [red, green, blue, orange, yellow, white, grey] = [
-    0xFF0000, 0x00C000, 0x0000FF,
-    0xFF8C00, 0xFFFF00, 0xFFFFFF, 0x555555
+    0xFF0000, 0x00FF00, 0x0000FF,
+    0xFA8128, 0xFFFF00, 0xFFFFFF, 0x555555
   ];
   const C = Model.FaceColor;
   const color = (color: Model.FaceColor) => {
@@ -86,8 +86,9 @@ light1.position.set(-5, 10, 15);
 
 const light2 = new THREE.HemisphereLight(0xffffff, 0x080820, 1);
 light2.position.set(-5, -10, 15);
-// const light = new THREE.AmbientLight(0x404040); // soft white light
-scene.add(light1, light2);
+const light = new THREE.AmbientLight(0xF7F7F7); // white light
+scene.add(light);
+// scene.add(light1, light2);
 
 camera.position.add(new THREE.Vector3(8, 8, 10));
 camera.lookAt(new THREE.Vector3(0, 0, 0));
