@@ -1,3 +1,5 @@
+import { CubeReflectionMapping } from "three";
+
 enum FaceColor {
   WHITE, YELLOW, BLUE, GREEN, RED, ORANGE
 };
@@ -48,8 +50,13 @@ const eqCube = (c1: Cube, c2: Cube) =>
   eqFace(c1.left,  c2.left)  &&
   eqFace(c1.right, c2.right)
 
-function moveU(cube: Cube): Cube {
-  const {front, back, up, down, left, right} = cube;
+function copyCell(to: Face, from: Face, indice: number[]): Face {
+  const target = to.concat([]);
+  indice.forEach(idx => target[idx] = from[idx]);
+  return target;
+}
+
+function moveU({front, back, up, down, left, right}: Cube): Cube {
   return {
     front: front.slice(0, 6).concat(right.slice(6, 9)),
     back: back.slice(0, 6).concat(left.slice(6,9)),
@@ -60,9 +67,27 @@ function moveU(cube: Cube): Cube {
   }
 }
 
-const move: (m: Move) => (cube: Cube) => Cube =
+
+type CubeFunc = (c: Cube) => Cube;
+
+function moveR(prime: boolean): CubeFunc {
+  return ({front, back, up, down, left, right}: Cube) => {
+    return {
+      front: copyCell(front, prime ? up : down,    [2, 5, 8]),
+      back : copyCell(back,  prime ? down : up,    [2, 5, 8]),
+      up   : copyCell(up,    prime ? back : front, [2, 5, 8]),
+      down : copyCell(down,  prime ? front : back, [2, 5, 8]),
+      left,
+      right,
+    }
+  }
+}
+
+const move: (m: Move) => CubeFunc =
   m => {
     if (m == Move.U) return moveU;
+    else if (m == Move.R) return moveR(true);
+    else if (m == Move.R_) return moveR(false);
     else moveU;
   }
 
