@@ -127,11 +127,16 @@ function rotateLayer(layerIndex: number, theta: number) {
   layers[layerIndex].forEach(i => meshes[i].applyMatrix4(matrix(theta)));
 }
 
-function move(m: Model.Move) {
+function resetCubes(c: Model.Cube): Model.Cube {
   scene.remove.apply(scene, meshes);
-  cube = Model.move(m)(cube);
+  cube = c;
   meshes = cubeToMeshes(cube);
   scene.add.apply(scene, meshes);
+  return cube;
+}
+
+function move(m: Model.Move) {
+  resetCubes(Model.move(m)(cube));
 }
 
 window.onkeydown = (ev: KeyboardEvent) => {
@@ -146,6 +151,7 @@ window.onkeydown = (ev: KeyboardEvent) => {
     case "KeyB": move(prime ? M.B_ : M.B); break;
     case "KeyD": move(prime ? M.D_ : M.D); break;
     case "Space": setCameraPosition(); break;
+    case "Escape": resetCubes(Model.defaultCube); break;
   }
   return '';
 };
