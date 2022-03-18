@@ -95,9 +95,12 @@ const light = new THREE.AmbientLight(0xF7F7F7); // white light
 scene.add(light);
 // scene.add(light1, light2);
 
-camera.position.add(new THREE.Vector3(8, 8, 10));
-camera.lookAt(new THREE.Vector3(0, 0, 0));
+function setCameraPosition() {
+  camera.position.set(8, 8, 10);
+  camera.lookAt(new THREE.Vector3(0, 0, 0));
+}
 
+setCameraPosition();
 
 function animate(time: number) {
   requestAnimationFrame(animate);
@@ -142,6 +145,7 @@ window.onkeydown = (ev: KeyboardEvent) => {
     case "KeyF": move(prime ? M.F_ : M.F); break;
     case "KeyB": move(prime ? M.B_ : M.B); break;
     case "KeyD": move(prime ? M.D_ : M.D); break;
+    case "Space": setCameraPosition(); break;
   }
   return '';
 };
