@@ -52,22 +52,16 @@ const eqCube = (c1: Cube, c2: Cube) =>
 
 type CubeFunc = (c: Cube) => Cube;
 
-function copyFaceOld(to: Face, from: Face, indice: number[], indexF: (x: number) => number = x => x): Face {
-  const target = to.concat([]);
-  indice.forEach(idx => target[indexF(idx)] = from[idx]);
-  return target;
-}
-
 function copyFace(from: Face, fromIndexes: number[], to: Face, toIndexes: number[]): Face {
   const result = to.concat([]);
   toIndexes.forEach((ti, i) => result[ti] = from[fromIndexes[i]]);
   return result;
 }
 
-function reorderFace(fn: (x: number) => number): ((face: Face) => Face) {
+function reorderFace(from: (n: number) => number): ((face: Face) => Face) {
   return (face: Face) => {
     const target = face.concat([]);
-    face.forEach((x, i) => target[fn(i)] = x);
+    face.forEach((x, n) => target[from(n)] = x);
     return target;
   }
 }
@@ -114,10 +108,10 @@ function moveL(prime: boolean): CubeFunc {
   return ({front, back, up, down, left, right}: Cube) => {
     const turnedBack = halfTurn(back);
     return {
-      front: copyFace(prime ? up : down,          [0,3,6], front, [0,3,6]),
-      back : copyFace(prime ? down : up,          [0,3,6], back,  [8,5,2]),
-      up   : copyFace(prime ? turnedBack : front, [0,3,6], up,    [0,3,6]),
-      down : copyFace(prime ? front : turnedBack, [0,3,6], down,  [0,3,6]),
+      front: copyFace(prime ? down : up,          [0,3,6], front, [0,3,6]),
+      back : copyFace(prime ? up : down,          [6,3,0], back,  [2,5,8]),
+      up   : copyFace(prime ? front : turnedBack, [0,3,6], up,    [0,3,6]),
+      down : copyFace(prime ? turnedBack: front, [0,3,6], down,  [0,3,6]),
       left : (prime ? counterClockwise : clockwise)(left),
       right,
     }
@@ -130,7 +124,7 @@ function moveF(prime: boolean): CubeFunc {
       front: (prime ? counterClockwise : clockwise)(front),
       back,
       up   : copyFace(prime ? right : left, prime ? [6,3,0] : [2,5,8], up,    [0,1,2]),
-      down : copyFace(prime ? left : right, prime ? [2,5,8] : [0,3,6], down,  [6,7,8]),
+      down : copyFace(prime ? left : right, prime ? [8,5,2] : [0,3,6], down,  [6,7,8]),
       left : copyFace(prime ? up : down,    prime ? [0,1,2] : [8,7,6], left,  [2,5,8]),
       right: copyFace(prime ? down : up,    prime ? [6,7,8] : [2,1,0], right, [0,3,6]),
     }
