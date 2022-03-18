@@ -130,9 +130,9 @@ function moveF(prime: boolean): CubeFunc {
       front: (prime ? counterClockwise : clockwise)(front),
       back,
       up   : copyFace(prime ? right : left, prime ? [6,3,0] : [2,5,8], up,    [0,1,2]),
-      down : copyFace(prime ? left : right, prime ? [6,3,0] : [0,3,6], down,  [6,7,8]),
+      down : copyFace(prime ? left : right, prime ? [2,5,8] : [0,3,6], down,  [6,7,8]),
       left : copyFace(prime ? up : down,    prime ? [0,1,2] : [8,7,6], left,  [2,5,8]),
-      right: copyFace(prime ? down : up,    prime ? [6,7,8] : [0,1,2], right, [6,3,0]),
+      right: copyFace(prime ? down : up,    prime ? [6,7,8] : [2,1,0], right, [0,3,6]),
     }
   }
 }
