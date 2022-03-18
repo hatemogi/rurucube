@@ -1,20 +1,29 @@
 import { Cube, eqCube, defaultCube, move, Move } from '../src/model';
 
+function expectCube(expected: Cube, actual: Cube) {
+  expect(eqCube(expected, actual)).toBe(true);
+}
+
+function expectNoChange(fn: ((c: Cube) => Cube)) {
+  expect(eqCube(defaultCube, fn(defaultCube))).toBe(true);
+}
+
 test('cube equality', () => {
   expect(eqCube(defaultCube, defaultCube)).toBe(true);
+  expect(eqCube(defaultCube, move(Move.U)(defaultCube))).toBe(false);
 });
 
 test('move 4 times result in same cube', () => {
-  const moveU = move(Move.U);
-  const moveR = move(Move.R);
-  const moveU4 = (cube: Cube) => moveU(moveU(moveU(moveU(cube))));
-  const moveR4 = (cube: Cube) => moveR(moveR(moveR(moveR(cube))));
-  expect(eqCube(defaultCube, moveU(defaultCube))).toBe(false);
-  expect(eqCube(defaultCube, moveU4(defaultCube))).toBe(true);
-  expect(eqCube(defaultCube, moveR4(defaultCube))).toBe(true);
+  const moveU4 = move(Move.U, Move.U, Move.U, Move.U);
+  const moveR4 = move(Move.R, Move.R, Move.R, Move.R);
+  expectNoChange(moveU4);
+  expectNoChange(moveR4);
 });
 
-test('moving R_ after R results same cube', () => {
-  const moveRR_ = (cube: Cube) => move(Move.R_)((move(Move.R)(cube)));
-  expect(eqCube(defaultCube, moveRR_(defaultCube))).toBe(true);
+test('moving *_ after * results same cube', () => {
+  expectNoChange(move(Move.R, Move.R_));
+  expectNoChange(move(Move.R_, Move.R));
+  expectNoChange(move(Move.R, Move.R, Move.R_, Move.R_));
+  expectNoChange(move(Move.L, Move.L_));
+  expectNoChange(move(Move.L_, Move.L));
 });

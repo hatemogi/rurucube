@@ -1,5 +1,3 @@
-import { CubeReflectionMapping } from "three";
-
 enum FaceColor {
   WHITE, YELLOW, BLUE, GREEN, RED, ORANGE
 };
@@ -7,7 +5,9 @@ enum FaceColor {
 type Face = FaceColor[];
 
 enum FaceIndex {
-  FRONT, BACK, UP, DOWN, LEFT, RIGHT
+  DR, D, DL,
+  R, C, L,
+  UR, U, UL
 }
 
 type Cube = {
@@ -50,45 +50,125 @@ const eqCube = (c1: Cube, c2: Cube) =>
   eqFace(c1.left,  c2.left)  &&
   eqFace(c1.right, c2.right)
 
-function copyCell(to: Face, from: Face, indice: number[]): Face {
+type CubeFunc = (c: Cube) => Cube;
+
+function copyFaceOld(to: Face, from: Face, indice: number[], indexF: (x: number) => number = x => x): Face {
   const target = to.concat([]);
-  indice.forEach(idx => target[idx] = from[idx]);
+  indice.forEach(idx => target[indexF(idx)] = from[idx]);
   return target;
 }
 
-function moveU({front, back, up, down, left, right}: Cube): Cube {
-  return {
-    front: front.slice(0, 6).concat(right.slice(6, 9)),
-    back: back.slice(0, 6).concat(left.slice(6,9)),
-    up,
-    down,
-    left: left.slice(0, 6).concat(front.slice(6,9)),
-    right: right.slice(0, 6).concat(back.slice(6,9))
+function copyFace(from: Face, fromIndexes: number[], to: Face, toIndexes: number[]): Face {
+  const result = to.concat([]);
+  toIndexes.forEach((ti, i) => result[ti] = from[fromIndexes[i]]);
+  return result;
+}
+
+function reorderFace(fn: (x: number) => number): ((face: Face) => Face) {
+  return (face: Face) => {
+    const target = face.concat([]);
+    face.forEach((x, i) => target[fn(i)] = x);
+    return target;
   }
 }
 
+const clockwiseF = (x: number) => (7 * x + 6) % 10;
+const counterClockwiseF = (x: number) => (3 * x + 2) % 10;
+const halfTurnF = (x: number) => 8 - x;
 
-type CubeFunc = (c: Cube) => Cube;
+const clockwise = reorderFace(clockwiseF);
+const counterClockwise = reorderFace(counterClockwiseF);
+const halfTurn = reorderFace(halfTurnF);
+
+function moveU(prime: boolean): CubeFunc {
+  return ({front, back, up, down, left, right}: Cube) => {
+    return {
+      front: copyFace(right, [6,7,8], front, [6,7,8]),
+      back : copyFace(left , [6,7,8],  back, [6,7,8]),
+      up   : (prime ? counterClockwise : clockwise)(up),
+      down,
+      left: copyFace(front, [6,7,8], left,  [6,7,8]),
+      right: copyFace(back, [6,7,8], right, [6,7,8])
+    }
+  }
+}
 
 function moveR(prime: boolean): CubeFunc {
   return ({front, back, up, down, left, right}: Cube) => {
+    const turnedBack = halfTurn(back);
     return {
-      front: copyCell(front, prime ? up : down,    [2, 5, 8]),
-      back : copyCell(back,  prime ? down : up,    [2, 5, 8]),
-      up   : copyCell(up,    prime ? back : front, [2, 5, 8]),
-      down : copyCell(down,  prime ? front : back, [2, 5, 8]),
+      front: copyFace(prime ? up : down, [2,5,8], front, [2,5,8]),
+      back : prime ? copyFace(down,  [2,5,8], back, [6,3,0])
+                   : copyFace(up,    [2,5,8], back, [6,3,0]),
+      up   : prime ? copyFace(turnedBack,  [2,5,8], up,   [2,5,8])
+                   : copyFace(front, [2,5,8], up,   [2,5,8]),
+      down : prime ? copyFace(front, [2,5,8], down, [2,5,8])
+                   : copyFace(turnedBack,  [2,5,8], down, [2,5,8]),
       left,
+      right : (prime ? counterClockwise : clockwise)(right),
+    }
+  }
+}
+
+function moveL(prime: boolean): CubeFunc {
+  return ({front, back, up, down, left, right}: Cube) => {
+    const turnedBack = halfTurn(back);
+    return {
+      front: copyFace(prime ? up : down,          [0,3,6], front, [0,3,6]),
+      back : copyFace(prime ? down : up,          [0,3,6], back,  [8,5,2]),
+      up   : copyFace(prime ? turnedBack : front, [0,3,6], up,    [0,3,6]),
+      down : copyFace(prime ? front : turnedBack, [0,3,6], down,  [0,3,6]),
+      left : (prime ? counterClockwise : clockwise)(left),
       right,
     }
   }
 }
 
-const move: (m: Move) => CubeFunc =
-  m => {
-    if (m == Move.U) return moveU;
-    else if (m == Move.R) return moveR(true);
-    else if (m == Move.R_) return moveR(false);
-    else moveU;
+function moveF(prime: boolean): CubeFunc {
+  return ({front, back, up, down, left, right}: Cube) => {
+    return {
+      front: (prime ? counterClockwise : clockwise)(front),
+      back,
+      up   : copyFace(prime ? right : left, prime ? [6,3,0] : [2,5,8], up,    [0,1,2]),
+      down : copyFace(prime ? left : right, prime ? [6,3,0] : [0,3,6], down,  [6,7,8]),
+      left : copyFace(prime ? up : down,    prime ? [0,1,2] : [8,7,6], left,  [2,5,8]),
+      right: copyFace(prime ? down : up,    prime ? [6,7,8] : [0,1,2], right, [6,3,0]),
+    }
   }
+}
+
+function moveD(prime: boolean): CubeFunc {
+  return ({front, back, up, down, left, right}: Cube) => {
+    return {
+      front: copyFace(prime ? right : left, prime ? [0,1,2] : [0,1,2], front, [0,1,2]),
+      back : copyFace(prime ? left : right, prime ? [0,1,2] : [0,1,2], back,  [0,1,2]),
+      up,
+      down : (prime ? counterClockwise : clockwise)(down),
+      left : copyFace(prime ? front : back, prime ? [0,1,2] : [0,1,2], left,  [0,1,2]),
+      right: copyFace(prime ? back : front, prime ? [0,1,2] : [0,1,2], right, [0,1,2]),
+    }
+  }
+}
+
+const moveOne: (m: Move) => CubeFunc =
+  m => {
+    switch (m) {
+      case Move.U : return moveU(false);
+      case Move.U_: return moveU(true);
+      case Move.R : return moveR(false);
+      case Move.R_: return moveR(true);
+      case Move.L : return moveL(false);
+      case Move.L_: return moveL(true);
+      case Move.F : return moveF(false);
+      case Move.F_: return moveF(true);
+      case Move.D : return moveD(false);
+      case Move.D_: return moveD(true);
+      default: return moveU(true);
+    }
+  }
+
+function move(...sequence: Move[]): CubeFunc {
+  return (initialCube: Cube) => sequence.reduce((cube, m) => moveOne(m)(cube), initialCube);
+}
 
 export { FaceColor, Face, Cube, defaultCube, Move, move, eqCube };

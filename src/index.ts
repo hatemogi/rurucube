@@ -39,12 +39,14 @@ function cubeToMeshes(cube: Model.Cube): THREE.Mesh[] {
   }
   const {front, back, up, down, left, right} = cube;
   return [0, 1, 2].flatMap(z => [0, 1, 2].flatMap(y => [0, 1, 2].map(x => {
+    // z = 0 -> 앞쪽.
+    // z = 2 -> 뒷쪽
     const frontColor = (z == 0) ? color(front[x + y * 3]) : grey;
     const backColor  = (z == 2) ? color(back[(2 - x) + y * 3]) : grey;
     const upColor    = (y == 2) ? color(up[x + z * 3]) : grey;
-    const downColor  = (y == 0) ? color(down[x + z * 3]) : grey;
-    const leftColor  = (x == 0) ? color(left[z + y * 3]) : grey;
-    const rightColor = (x == 2) ? color(right[(2 - z) + y * 3]) : grey;
+    const downColor  = (y == 0) ? color(down[x + (2 - z) * 3]) : grey;
+    const leftColor  = (x == 0) ? color(left[(2 - z) + y * 3]) : grey;
+    const rightColor = (x == 2) ? color(right[z + y * 3]) : grey;
 
     const geometry = new THREE.BoxGeometry(CELL_SIZE, CELL_SIZE, CELL_SIZE);
     // meterial 순서 => [right, left, up, down, front, back]
@@ -59,8 +61,12 @@ function cubeToMeshes(cube: Model.Cube): THREE.Mesh[] {
   })));
 }
 
-const cubes = cubeToMeshes(Model.defaultCube);
-cubes.forEach(cube => scene.add(cube));
+var cube = Model.defaultCube;
+var meshes = cubeToMeshes(cube);
+scene.add.apply(scene, meshes);
+// cubes.forEach(cube => scene.add(cube));
+
+// scene.remove.apply(scene, cubes);
 
 const rotX: (theta: number) => THREE.Matrix4 = theta => new THREE.Matrix4().makeRotationX(theta);
 const rotY: (theta: number) => THREE.Matrix4 = theta => new THREE.Matrix4().makeRotationY(theta);
@@ -99,7 +105,7 @@ function animate(time: number) {
   // time = 3400;
   const speed = 0.001;
   const current = time * speed;
-  cubes.forEach(cube => {
+  meshes.forEach(mesh => {
     //  cube.rotation.x = current;
     // cube.rotation.x = current; cube.rotation.y = current; cube.rotation.z = current * 1.1;
   });
@@ -116,18 +122,25 @@ function rotateLayer(layerIndex: number, theta: number) {
     else if (layerIndex < 6) return rotX(theta);
     else return rotY(theta);
   }
-  layers[layerIndex].forEach(i => cubes[i].applyMatrix4(matrix(theta)));
+  layers[layerIndex].forEach(i => meshes[i].applyMatrix4(matrix(theta)));
 }
 
-window.onkeyup = (ev: KeyboardEvent) => {
-  console.log('keyup', ev.code, ev.ctrlKey, ev.timeStamp);
+function move(m: Model.Move) {
+  scene.remove.apply(scene, meshes);
+  cube = Model.move(m)(cube);
+  meshes = cubeToMeshes(cube);
+  scene.add.apply(scene, meshes);
+}
+
+window.onkeydown = (ev: KeyboardEvent) => {
+  console.log('keydown', ev.code, ev.ctrlKey, ev.timeStamp);
   switch (ev.code) {
-    case "KeyU": rotateLayer(6, -Math.PI / 2); break;
-    case "KeyR": rotateLayer(5, -Math.PI / 2); break;
-    case "KeyL": rotateLayer(3, Math.PI / 2); break;
-    case "KeyF": rotateLayer(0, -Math.PI / 2); break;
-    case "KeyB": rotateLayer(2, Math.PI / 2); break;
-    case "KeyD": rotateLayer(8, Math.PI / 2); break;
+    case "KeyU": move(Model.Move.U); break;
+    case "KeyR": move(Model.Move.R); break;
+    case "KeyL": move(Model.Move.L); break;
+    case "KeyF": move(Model.Move.F); break;
+    case "KeyB": move(Model.Move.B); break;
+    case "KeyD": move(Model.Move.D); break;
   }
   return '';
 };
