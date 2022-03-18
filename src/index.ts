@@ -1,8 +1,7 @@
 const { Elm } = require('./Main.elm');
 import * as THREE from 'three';
 import * as Model from './model';
-import { OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
-import { Layers, PointsMaterial } from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 const mountNode = document.getElementById('elm-app');
 
@@ -134,13 +133,15 @@ function move(m: Model.Move) {
 
 window.onkeydown = (ev: KeyboardEvent) => {
   console.log('keydown', ev.code, ev.ctrlKey, ev.timeStamp);
+  const M = Model.Move;
+  const prime = ev.ctrlKey;
   switch (ev.code) {
-    case "KeyU": move(Model.Move.U); break;
-    case "KeyR": move(Model.Move.R); break;
-    case "KeyL": move(Model.Move.L); break;
-    case "KeyF": move(Model.Move.F); break;
-    case "KeyB": move(Model.Move.B); break;
-    case "KeyD": move(Model.Move.D); break;
+    case "KeyU": move(prime ? M.U_ : M.U); break;
+    case "KeyL": move(prime ? M.L_ : M.L); break;
+    case "KeyR": move(prime ? M.R_ : M.R); break;
+    case "KeyF": move(prime ? M.F_ : M.F); break;
+    case "KeyB": move(prime ? M.B_ : M.B); break;
+    case "KeyD": move(prime ? M.D_ : M.D); break;
   }
   return '';
 };

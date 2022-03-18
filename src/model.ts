@@ -83,12 +83,12 @@ const halfTurn = reorderFace(halfTurnF);
 function moveU(prime: boolean): CubeFunc {
   return ({front, back, up, down, left, right}: Cube) => {
     return {
-      front: copyFace(right, [6,7,8], front, [6,7,8]),
-      back : copyFace(left , [6,7,8],  back, [6,7,8]),
+      front: copyFace(prime ? left : right, [6,7,8], front, [6,7,8]),
+      back : copyFace(prime ? right : left, [6,7,8],  back, [6,7,8]),
       up   : (prime ? counterClockwise : clockwise)(up),
       down,
-      left: copyFace(front, [6,7,8], left,  [6,7,8]),
-      right: copyFace(back, [6,7,8], right, [6,7,8])
+      left: copyFace(prime ? back : front, [6,7,8], left,  [6,7,8]),
+      right: copyFace(prime ? front: back, [6,7,8], right, [6,7,8])
     }
   }
 }
