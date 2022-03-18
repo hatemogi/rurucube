@@ -91,13 +91,10 @@ function moveR(prime: boolean): CubeFunc {
   return ({front, back, up, down, left, right}: Cube) => {
     const turnedBack = halfTurn(back);
     return {
-      front: copyFace(prime ? up : down, [2,5,8], front, [2,5,8]),
-      back : prime ? copyFace(down,  [2,5,8], back, [6,3,0])
-                   : copyFace(up,    [2,5,8], back, [6,3,0]),
-      up   : prime ? copyFace(turnedBack,  [2,5,8], up,   [2,5,8])
-                   : copyFace(front, [2,5,8], up,   [2,5,8]),
-      down : prime ? copyFace(front, [2,5,8], down, [2,5,8])
-                   : copyFace(turnedBack,  [2,5,8], down, [2,5,8]),
+      front: copyFace(prime ? up : down,          [2,5,8], front, [2,5,8]),
+      back : copyFace(prime ? down : up,          [2,5,8], back,  [6,3,0]),
+      up   : copyFace(prime ? turnedBack : front, [2,5,8], up,    [2,5,8]),
+      down : copyFace(prime ? front : turnedBack, [2,5,8], down,  [2,5,8]),
       left,
       right : (prime ? counterClockwise : clockwise)(right),
     }
@@ -111,7 +108,7 @@ function moveL(prime: boolean): CubeFunc {
       front: copyFace(prime ? down : up,          [0,3,6], front, [0,3,6]),
       back : copyFace(prime ? up : down,          [6,3,0], back,  [2,5,8]),
       up   : copyFace(prime ? front : turnedBack, [0,3,6], up,    [0,3,6]),
-      down : copyFace(prime ? turnedBack: front, [0,3,6], down,  [0,3,6]),
+      down : copyFace(prime ? turnedBack: front,  [0,3,6], down,  [0,3,6]),
       left : (prime ? counterClockwise : clockwise)(left),
       right,
     }
@@ -134,12 +131,12 @@ function moveF(prime: boolean): CubeFunc {
 function moveD(prime: boolean): CubeFunc {
   return ({front, back, up, down, left, right}: Cube) => {
     return {
-      front: copyFace(prime ? right : left, prime ? [0,1,2] : [0,1,2], front, [0,1,2]),
-      back : copyFace(prime ? left : right, prime ? [0,1,2] : [0,1,2], back,  [0,1,2]),
+      front: copyFace(prime ? right : left, [0,1,2], front, [0,1,2]),
+      back : copyFace(prime ? left : right, [0,1,2], back,  [0,1,2]),
       up,
       down : (prime ? counterClockwise : clockwise)(down),
-      left : copyFace(prime ? front : back, prime ? [0,1,2] : [0,1,2], left,  [0,1,2]),
-      right: copyFace(prime ? back : front, prime ? [0,1,2] : [0,1,2], right, [0,1,2]),
+      left : copyFace(prime ? front : back, [0,1,2], left,  [0,1,2]),
+      right: copyFace(prime ? back : front, [0,1,2], right, [0,1,2]),
     }
   }
 }
