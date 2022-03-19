@@ -1,13 +1,13 @@
 enum FaceColor {
-  WHITE, YELLOW, BLUE, GREEN, RED, ORANGE
+  WHITE, YELLOW, BLUE, GREEN, RED, ORANGE, NONE
 };
 
 type Face = FaceColor[];
 
 enum FaceIndex {
-  DR, D, DL,
-  R, C, L,
-  UR, U, UL
+  DL, D, DR,
+  L, C, R,
+  UL, U, UR
 }
 
 type Cube = {
@@ -19,9 +19,10 @@ type Cube = {
   right : Face
 };
 
-const [W, Y, B, G, R, O] = [
+const [W, Y, B, G, R, O, None] = [
   FaceColor.WHITE, FaceColor.YELLOW, FaceColor.BLUE,
-  FaceColor.GREEN, FaceColor.RED,    FaceColor.ORANGE
+  FaceColor.GREEN, FaceColor.RED,    FaceColor.ORANGE,
+  FaceColor.NONE
 ];
 
 const defaultCube: Cube = {
@@ -155,6 +156,8 @@ const moveOne: (m: Move) => CubeFunc =
       case Move.F_: return moveF(prime);
       case Move.D : return moveD(normal);
       case Move.D_: return moveD(prime);
+      // case Move.B : return moveB(normal);
+      // case Move.B_: return moveB(prime);
       default: return moveU(true);
     }
   }

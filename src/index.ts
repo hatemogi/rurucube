@@ -34,11 +34,12 @@ function repositionCubeMeshes(meshes: THREE.Mesh[]): THREE.Mesh[] {
   return meshes;
 }
 
+const [red, green, blue, orange, yellow, white, grey] = [
+  0xFF0000, 0x00FF00, 0x0000FF,
+  0xFA8128, 0xFFFF00, 0xFFFFFF, 0x555555
+].map(color => new THREE.MeshPhongMaterial({ color }));
+
 function cubeToMeshes(cube: Model.Cube): THREE.Mesh[] {
-  const [red, green, blue, orange, yellow, white, grey] = [
-    0xFF0000, 0x00FF00, 0x0000FF,
-    0xFA8128, 0xFFFF00, 0xFFFFFF, 0x555555
-  ];
   const C = Model.FaceColor;
   const color = (color: Model.FaceColor) => {
     if (color === C.WHITE) return white;
@@ -49,7 +50,7 @@ function cubeToMeshes(cube: Model.Cube): THREE.Mesh[] {
     else if (color === C.ORANGE) return orange;
   }
   const {front, back, up, down, left, right} = cube;
-  const meshes = [0, 1, 2].flatMap(z => [0, 1, 2].flatMap(y => [0, 1, 2].map(x => {
+  return [0, 1, 2].flatMap(z => [0, 1, 2].flatMap(y => [0, 1, 2].map(x => {
     // z = 0 -> 앞쪽.
     // z = 2 -> 뒷쪽
     const frontColor = (z == 0) ? color(front[x + y * 3]) : grey;
@@ -64,11 +65,11 @@ function cubeToMeshes(cube: Model.Cube): THREE.Mesh[] {
 
     const materials = [
       rightColor, leftColor, upColor, downColor, frontColor, backColor
-    ].map(color => new THREE.MeshPhongMaterial({ color }));
-
-    return new THREE.Mesh(geometry, materials);
+    ];
+    const mesh = new THREE.Mesh(geometry, materials);
+    mesh.position.set((x-1) * CELL_DISTANCE, (y-1) * CELL_DISTANCE, -(z-1) * CELL_DISTANCE);
+    return mesh;
   })));
-  return repositionCubeMeshes(meshes);
 }
 
 var cube = Model.defaultCube;
@@ -118,7 +119,8 @@ function rotateLayer(layerIndex: number, theta: number) {
     else if (layerIndex < 6) return rotX(theta);
     else return rotY(theta);
   }
-  layers[layerIndex].forEach(i => meshes[i].applyMatrix4(matrix(theta)));
+  const m = matrix(theta);
+  layers[layerIndex].forEach(i => meshes[i].applyMatrix4(m));
 }
 
 function resetCubes(c: Model.Cube): Model.Cube {
@@ -136,6 +138,7 @@ type AnimationCommand = {
   requestAt: FrameTime;
   startAt: FrameTime;
   endAt: FrameTime;
+  processedUntil: FrameTime;
   onTime: (t: FrameTime, animation: AnimationCommand) => void;
   onFinish: (t: FrameTime) => void;
 }
@@ -166,15 +169,17 @@ function moveToAngle(m: Model.Move): number {
 function move(m: Model.Move, t: FrameTime) {
   commandHistory.push(m);
   console.log("history", commandHistory);
+  const layer = moveToLayer(m);
+  const angle = moveToAngle(m);
   animationQueue.push({
     requestAt: t,
     startAt: 0,
+    processedUntil: 0,
     endAt: 0,
     onTime: (t, animation) => {
-      const dt = t - animation.startAt;
+      const dt = t - animation.processedUntil;
       const duration = animation.endAt - animation.startAt;
-      repositionCubeMeshes(meshes);
-      rotateLayer(moveToLayer(m), moveToAngle(m) * (dt / duration));
+      rotateLayer(layer, angle * (dt / duration));
     },
     onFinish: t => {
       resetCubes(Model.move(m)(cube));
@@ -183,16 +188,18 @@ function move(m: Model.Move, t: FrameTime) {
 }
 
 function doAnimation(t: FrameTime) {
-  const duration = 400; // in milliseconds
+  const duration = 300; // in milliseconds
   if (animationQueue.length > 0) {
     const animation = animationQueue[0];
     if (animation.startAt <= 0) {
       // not started yet
       animation.startAt = t;
+      animation.processedUntil = t;
       animation.endAt = t + duration;
     } else if (t <= animation.endAt) {
       // should be during animation
       animation.onTime(t, animation);
+      animation.processedUntil = t;
     } else {
       // finished
       animation.onFinish(t);
