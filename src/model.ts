@@ -143,17 +143,18 @@ function moveD(prime: boolean): CubeFunc {
 
 const moveOne: (m: Move) => CubeFunc =
   m => {
+    const [normal, prime] = [false, true];
     switch (m) {
-      case Move.U : return moveU(false);
-      case Move.U_: return moveU(true);
-      case Move.R : return moveR(false);
-      case Move.R_: return moveR(true);
-      case Move.L : return moveL(false);
-      case Move.L_: return moveL(true);
-      case Move.F : return moveF(false);
-      case Move.F_: return moveF(true);
-      case Move.D : return moveD(false);
-      case Move.D_: return moveD(true);
+      case Move.U : return moveU(normal);
+      case Move.U_: return moveU(prime);
+      case Move.R : return moveR(normal);
+      case Move.R_: return moveR(prime);
+      case Move.L : return moveL(normal);
+      case Move.L_: return moveL(prime);
+      case Move.F : return moveF(normal);
+      case Move.F_: return moveF(prime);
+      case Move.D : return moveD(normal);
+      case Move.D_: return moveD(prime);
       default: return moveU(true);
     }
   }

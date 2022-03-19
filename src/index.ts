@@ -22,6 +22,18 @@ controls.maxDistance = 30;
 const CELL_SIZE = 2;
 const CELL_DISTANCE = CELL_SIZE * 1.03
 
+function repositionCubeMeshes(meshes: THREE.Mesh[]): THREE.Mesh[] {
+  meshes.forEach((mesh, i) => {
+    const z = Math.floor(i / 9);
+    const xy = Math.floor(i % 9);
+    const y = Math.floor(xy / 3);
+    const x = xy % 3;
+    mesh.position.set((x-1) * CELL_DISTANCE, (y-1) * CELL_DISTANCE, -(z-1) * CELL_DISTANCE);
+    mesh.rotation.set(0, 0, 0);
+  });
+  return meshes;
+}
+
 function cubeToMeshes(cube: Model.Cube): THREE.Mesh[] {
   const [red, green, blue, orange, yellow, white, grey] = [
     0xFF0000, 0x00FF00, 0x0000FF,
@@ -37,7 +49,7 @@ function cubeToMeshes(cube: Model.Cube): THREE.Mesh[] {
     else if (color === C.ORANGE) return orange;
   }
   const {front, back, up, down, left, right} = cube;
-  return [0, 1, 2].flatMap(z => [0, 1, 2].flatMap(y => [0, 1, 2].map(x => {
+  const meshes = [0, 1, 2].flatMap(z => [0, 1, 2].flatMap(y => [0, 1, 2].map(x => {
     // z = 0 -> 앞쪽.
     // z = 2 -> 뒷쪽
     const frontColor = (z == 0) ? color(front[x + y * 3]) : grey;
@@ -54,10 +66,9 @@ function cubeToMeshes(cube: Model.Cube): THREE.Mesh[] {
       rightColor, leftColor, upColor, downColor, frontColor, backColor
     ].map(color => new THREE.MeshPhongMaterial({ color }));
 
-    const cube = new THREE.Mesh(geometry, materials);
-    cube.position.set((x-1) * CELL_DISTANCE, (y-1) * CELL_DISTANCE, -(z-1) * CELL_DISTANCE);
-    return cube;
+    return new THREE.Mesh(geometry, materials);
   })));
+  return repositionCubeMeshes(meshes);
 }
 
 var cube = Model.defaultCube;
@@ -100,23 +111,6 @@ function setCameraPosition() {
   camera.lookAt(new THREE.Vector3(0, 0, 0));
 }
 
-setCameraPosition();
-
-function animate(time: number) {
-  requestAnimationFrame(animate);
-  // time = 3400;
-  const speed = 0.001;
-  const current = time * speed;
-  meshes.forEach(mesh => {
-    //  cube.rotation.x = current;
-    // cube.rotation.x = current; cube.rotation.y = current; cube.rotation.z = current * 1.1;
-  });
-  controls.update();
-  renderer.render(scene, camera);
-}
-
-renderer.setPixelRatio( window.devicePixelRatio );
-requestAnimationFrame(animate);
 
 function rotateLayer(layerIndex: number, theta: number) {
   const matrix = (theta: number) => {
@@ -135,23 +129,104 @@ function resetCubes(c: Model.Cube): Model.Cube {
   return cube;
 }
 
-function move(m: Model.Move) {
-  resetCubes(Model.move(m)(cube));
+const commandHistory: Model.Move[] = [];
+
+type FrameTime = number;
+type AnimationCommand = {
+  requestAt: FrameTime;
+  startAt: FrameTime;
+  endAt: FrameTime;
+  onTime: (t: FrameTime, animation: AnimationCommand) => void;
+  onFinish: (t: FrameTime) => void;
+}
+
+const animationQueue: AnimationCommand[] = [];
+
+function moveToLayer(m: Model.Move): number {
+  const M = Model.Move;
+  switch (m) {
+    case M.U: case M.U_: return 6;
+    case M.D: case M.D_: return 8;
+    case M.R: case M.R_: return 5;
+    case M.L: case M.L_: return 3;
+    case M.F: case M.F_: return 0;
+    case M.B: case M.B_: return 2;
+  }
+}
+
+function moveToAngle(m: Model.Move): number {
+  const M = Model.Move;
+  const angle = Math.PI / 2;
+  switch (m) {
+    case M.U: case M.D_: case M.R: case M.L_: case M.F: case M.B: return -angle;
+    default: return angle;
+  }
+}
+
+function move(m: Model.Move, t: FrameTime) {
+  commandHistory.push(m);
+  console.log("history", commandHistory);
+  animationQueue.push({
+    requestAt: t,
+    startAt: 0,
+    endAt: 0,
+    onTime: (t, animation) => {
+      const dt = t - animation.startAt;
+      const duration = animation.endAt - animation.startAt;
+      repositionCubeMeshes(meshes);
+      rotateLayer(moveToLayer(m), moveToAngle(m) * (dt / duration));
+    },
+    onFinish: t => {
+      resetCubes(Model.move(m)(cube));
+    }
+  });
+}
+
+function doAnimation(t: FrameTime) {
+  const duration = 400; // in milliseconds
+  if (animationQueue.length > 0) {
+    const animation = animationQueue[0];
+    if (animation.startAt <= 0) {
+      // not started yet
+      animation.startAt = t;
+      animation.endAt = t + duration;
+    } else if (t <= animation.endAt) {
+      // should be during animation
+      animation.onTime(t, animation);
+    } else {
+      // finished
+      animation.onFinish(t);
+      animationQueue.shift();
+    }
+  }
 }
 
 window.onkeydown = (ev: KeyboardEvent) => {
   console.log('keydown', ev.code, ev.ctrlKey, ev.timeStamp);
   const M = Model.Move;
+  const t = ev.timeStamp;
   const prime = ev.ctrlKey;
   switch (ev.code) {
-    case "KeyU": move(prime ? M.U_ : M.U); break;
-    case "KeyL": move(prime ? M.L_ : M.L); break;
-    case "KeyR": move(prime ? M.R_ : M.R); break;
-    case "KeyF": move(prime ? M.F_ : M.F); break;
-    case "KeyB": move(prime ? M.B_ : M.B); break;
-    case "KeyD": move(prime ? M.D_ : M.D); break;
+    case "KeyU": move(prime ? M.U_ : M.U, t); break;
+    case "KeyL": move(prime ? M.L_ : M.L, t); break;
+    case "KeyR": move(prime ? M.R_ : M.R, t); break;
+    case "KeyF": move(prime ? M.F_ : M.F, t); break;
+    case "KeyB": move(prime ? M.B_ : M.B, t); break;
+    case "KeyD": move(prime ? M.D_ : M.D, t); break;
     case "Space": setCameraPosition(); break;
     case "Escape": resetCubes(Model.defaultCube); break;
   }
   return '';
 };
+
+setCameraPosition();
+
+function animate(time: number) {
+  requestAnimationFrame(animate);
+  doAnimation(time);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+renderer.setPixelRatio( window.devicePixelRatio );
+requestAnimationFrame(animate);
