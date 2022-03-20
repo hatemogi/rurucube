@@ -129,6 +129,10 @@ function rotateLayer(layerIndex: number, theta: number) {
   layers[layerIndex].forEach(i => meshes[i].applyMatrix4(m));
 }
 
+function rotateAll(matrix: THREE.Matrix4) {
+  meshes.forEach(mesh => mesh.applyMatrix4(matrix));
+}
+
 function resetCubes(c: Model.Cube): Model.Cube {
   scene.remove.apply(scene, meshes);
   cube = c;
@@ -167,7 +171,9 @@ function moveToAngle(m: Model.Move): number {
   const M = Model.Move;
   const angle = Math.PI / 2;
   switch (m) {
-    case M.U: case M.D_: case M.R: case M.L_: case M.F: case M.B: return -angle;
+    case M.U: case M.D_: case M.R: case M.L_:
+    case M.F: case M.B:
+    case M.Y: case M.X: case M.Z: return -angle;
     default: return angle;
   }
 }
@@ -185,7 +191,11 @@ function move(m: Model.Move, t: FrameTime) {
     onTime: (t, animation) => {
       const dt = t - animation.processedUntil;
       const duration = animation.endAt - animation.startAt;
-      rotateLayer(layer, angle * (dt / duration));
+      if (m == Model.Move.Y || m == Model.Move.Y_) {
+        rotateAll(rotY(angle * (dt / duration)));
+      } else {
+        rotateLayer(layer, angle * (dt / duration));
+      }
     },
     onFinish: t => {
       resetCubes(Model.move(m)(cube));
@@ -226,6 +236,7 @@ window.onkeydown = (ev: KeyboardEvent) => {
     case "KeyF": move(prime ? M.F_ : M.F, t); break;
     case "KeyB": move(prime ? M.B_ : M.B, t); break;
     case "KeyD": move(prime ? M.D_ : M.D, t); break;
+    case "KeyY": move(prime ? M.Y_ : M.Y, t); break;
     case "Space": setCameraPosition(); break;
     case "Escape": resetCubes(Model.defaultCube); break;
   }
