@@ -34,9 +34,12 @@ function repositionCubeMeshes(meshes: THREE.Mesh[]): THREE.Mesh[] {
   return meshes;
 }
 
+// https://colorswall.com/palette/171
 const [red, green, blue, orange, yellow, white, grey] = [
-  0xFF0000, 0x00FF00, 0x0000FF,
-  0xFA8128, 0xFFFF00, 0xFFFFFF, 0x555555
+  // 0xFF0000, 0x00FF00, 0x0000FF,
+  // 0xFA8128, 0xFFFF00, 0xFFFFFF, 0x222222
+  0xb71234, 0x009b48, 0x0046ad,
+  0xff5800, 0xffd500, 0xffffff, 0x222222
 ].map(color => new THREE.MeshPhongMaterial({ color }));
 
 function cubeToMeshes(cube: Model.Cube): THREE.Mesh[] {
@@ -98,12 +101,15 @@ const layers: [Layer, Layer, Layer, Layer, Layer, Layer, Layer, Layer, Layer] = 
   [ 0, 9,18,  1,10,19,  2,11,20]
 ];
 
+/*
 const light1 = new THREE.HemisphereLight(0xffffff, 0x080820, 1);
 light1.position.set(-5, 10, 15);
 
 const light2 = new THREE.HemisphereLight(0xffffff, 0x080820, 1);
 light2.position.set(-5, -10, 15);
-const light = new THREE.AmbientLight(0xF7F7F7); // white light
+*/
+
+const light = new THREE.AmbientLight(0xFfFfFf); // white light
 scene.add(light);
 // scene.add(light1, light2);
 
