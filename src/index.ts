@@ -86,19 +86,24 @@ const rotX: (theta: number) => THREE.Matrix4 = theta => new THREE.Matrix4().make
 const rotY: (theta: number) => THREE.Matrix4 = theta => new THREE.Matrix4().makeRotationY(theta);
 const rotZ: (theta: number) => THREE.Matrix4 = theta => new THREE.Matrix4().makeRotationZ(theta);
 
-type Layer = [number,number,number,  number,number,number, number,number,number];
-const layers: [Layer, Layer, Layer, Layer, Layer, Layer, Layer, Layer, Layer] = [
+type Layer = number[];
+const allMeshes = [0,1,2, 3,4,5, 6,7,8, 9,10,11, 12,13,14, 15,16,17, 18,19,20, 21,22,23, 24,25,26];
+
+const layers: Layer[] = [
   [ 0, 1, 2,  3, 4, 5,  6, 7, 8],
   [ 9,10,11, 12,13,14, 15,16,17],
   [18,19,20, 21,22,23, 24,25,26],
+  allMeshes,
 
   [ 0, 9,18,  3,12,21,  6,15,24],
   [ 1,10,19,  4,13,22,  7,16,25],
   [ 2,11,20,  5,14,23,  8,17,26],
+  allMeshes,
 
   [ 6,15,24,  7,16,25,  8,17,26],
   [ 3,12,21,  4,13,22,  5,14,23],
-  [ 0, 9,18,  1,10,19,  2,11,20]
+  [ 0, 9,18,  1,10,19,  2,11,20],
+  allMeshes,
 ];
 
 /*
@@ -121,16 +126,12 @@ function setCameraPosition() {
 
 function rotateLayer(layerIndex: number, theta: number) {
   const matrix = (theta: number) => {
-    if (layerIndex < 3) return rotZ(theta);
-    else if (layerIndex < 6) return rotX(theta);
+    if (layerIndex < 4) return rotZ(theta);
+    else if (layerIndex < 8) return rotX(theta);
     else return rotY(theta);
   }
   const m = matrix(theta);
   layers[layerIndex].forEach(i => meshes[i].applyMatrix4(m));
-}
-
-function rotateAll(matrix: THREE.Matrix4) {
-  meshes.forEach(mesh => mesh.applyMatrix4(matrix));
 }
 
 function resetCubes(c: Model.Cube): Model.Cube {
@@ -158,12 +159,15 @@ const animationQueue: AnimationCommand[] = [];
 function moveToLayer(m: Model.Move): number {
   const M = Model.Move;
   switch (m) {
-    case M.U: case M.U_: return 6;
-    case M.D: case M.D_: return 8;
-    case M.R: case M.R_: return 5;
-    case M.L: case M.L_: return 3;
+    case M.U: case M.U_: return 8;
+    case M.D: case M.D_: return 10;
+    case M.R: case M.R_: return 6;
+    case M.L: case M.L_: return 4;
     case M.F: case M.F_: return 0;
     case M.B: case M.B_: return 2;
+    case M.X: case M.X_: return 7;
+    case M.Y: case M.Y_: return 11;
+    case M.Z: case M.Z_: return 3;
   }
 }
 
@@ -191,11 +195,7 @@ function move(m: Model.Move, t: FrameTime) {
     onTime: (t, animation) => {
       const dt = t - animation.processedUntil;
       const duration = animation.endAt - animation.startAt;
-      if (m == Model.Move.Y || m == Model.Move.Y_) {
-        rotateAll(rotY(angle * (dt / duration)));
-      } else {
-        rotateLayer(layer, angle * (dt / duration));
-      }
+      rotateLayer(layer, angle * (dt / duration));
     },
     onFinish: t => {
       resetCubes(Model.move(m)(cube));
@@ -236,7 +236,9 @@ window.onkeydown = (ev: KeyboardEvent) => {
     case "KeyF": move(prime ? M.F_ : M.F, t); break;
     case "KeyB": move(prime ? M.B_ : M.B, t); break;
     case "KeyD": move(prime ? M.D_ : M.D, t); break;
+    case "KeyX": move(prime ? M.X_ : M.X, t); break;
     case "KeyY": move(prime ? M.Y_ : M.Y, t); break;
+    case "KeyZ": move(prime ? M.Z_ : M.Z, t); break;
     case "Space": setCameraPosition(); break;
     case "Escape": resetCubes(Model.defaultCube); break;
   }

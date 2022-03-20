@@ -142,6 +142,19 @@ function moveD(prime: boolean): CubeFunc {
   }
 }
 
+function moveX(prime: boolean): CubeFunc {
+  return ({front, back, up, down, left, right}) => {
+    return {
+      front: prime ? up : down,
+      back : prime ? down : up,
+      up   : prime ? back : front,
+      down : prime ? front : back,
+      left : (prime ? clockwise : counterClockwise)(left),
+      right: (prime ? counterClockwise : clockwise)(right)
+    }
+  }
+}
+
 function moveY(prime: boolean): CubeFunc {
   return ({front, back, up, down, left, right}) => {
     return {
@@ -150,7 +163,20 @@ function moveY(prime: boolean): CubeFunc {
       up   : (prime ? counterClockwise : clockwise)(up),
       down : (prime ? clockwise : counterClockwise)(down),
       left : prime ? back : front,
-      right: prime ? front : back,
+      right: prime ? front : back
+    }
+  }
+}
+
+function moveZ(prime: boolean): CubeFunc {
+  return ({front, back, up, down, left, right}) => {
+    return {
+      front: (prime ? counterClockwise : clockwise)(front),
+      back : (prime ? clockwise : counterClockwise)(back),
+      up   : prime ? counterClockwise(right) : clockwise(left),
+      down : prime ? counterClockwise(left)  : clockwise(right),
+      left : prime ? counterClockwise(up)    : clockwise(down),
+      right: prime ? counterClockwise(down)  : clockwise(up)
     }
   }
 }
@@ -171,8 +197,12 @@ const moveOne: (m: Move) => CubeFunc =
       case Move.D_: return moveD(prime);
       // case Move.B : return moveB(normal);
       // case Move.B_: return moveB(prime);
+      case Move.X : return moveX(normal);
+      case Move.X_: return moveX(prime);
       case Move.Y : return moveY(normal);
       case Move.Y_: return moveY(prime);
+      case Move.Z : return moveZ(normal);
+      case Move.Z_: return moveZ(prime);
       default: return moveU(true);
     }
   }
