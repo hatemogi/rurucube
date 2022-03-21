@@ -27,38 +27,23 @@ test('cube equality', () => {
 });
 
 test('move 4 times result in same cube', () => {
-  const moveU4 = move(Move.U, Move.U, Move.U, Move.U);
-  const moveR4 = move(Move.R, Move.R, Move.R, Move.R);
-  const moveL4 = move(Move.L, Move.L, Move.L, Move.L);
-  const moveF4 = move(Move.F, Move.F, Move.F, Move.F);
-  const moveX4 = move(Move.X, Move.X, Move.X, Move.X);
-  const moveY4 = move(Move.Y, Move.Y, Move.Y, Move.Y);
-  const moveZ4 = move(Move.Z, Move.Z, Move.Z, Move.Z);
-  expectNoChange(moveU4);
-  expectNoChange(moveR4);
-  expectNoChange(moveL4);
-  expectNoChange(moveF4);
-  expectNoChange(moveX4);
-  expectNoChange(moveY4);
-  expectNoChange(moveZ4);
+  [Move.U, Move.U_, Move.R, Move.R_, Move.L, Move.L_,
+   Move.F, Move.F_, Move.D, Move.D_, Move.B, Move.B_,
+   Move.X, Move.X_, Move.Y, Move.Y_, Move.Z, Move.Z_
+  ].forEach(m => {
+    const move4 = move(m, m, m, m);
+    expectNoChange(move4);
+  });
 });
 
 test('moving *_ after * results same cube', () => {
-  expectNoChange(move(Move.U,  Move.U_));
-  expectNoChange(move(Move.U_, Move.U));
-  expectNoChange(move(Move.R,  Move.R_));
-  expectNoChange(move(Move.R_, Move.R));
-  expectNoChange(move(Move.L,  Move.L_));
-  expectNoChange(move(Move.L_, Move.L));
-  expectNoChange(move(Move.F,  Move.F_));
-  expectNoChange(move(Move.F_, Move.F));
-  expectNoChange(move(Move.D,  Move.D_));
-  expectNoChange(move(Move.D_, Move.D));
-  expectNoChange(move(Move.B,  Move.B_));
-  expectNoChange(move(Move.B_, Move.B));
-  expectNoChange(move(Move.X_, Move.X));
-  expectNoChange(move(Move.Y_, Move.Y));
-  expectNoChange(move(Move.Z_, Move.Z));
+  [[Move.U, Move.U_], [Move.R, Move.R_], [Move.L, Move.L_],
+   [Move.F, Move.F_], [Move.D, Move.D_], [Move.B, Move.B_],
+   [Move.X, Move.X_], [Move.Y, Move.Y_], [Move.Z, Move.Z_]
+  ].forEach(([normalM, primeM]) => {
+    expectNoChange(move(normalM, primeM));
+    expectNoChange(move(primeM, normalM));
+  });
 });
 
 test('moving R-pattern 6 times results same cube', () => {
