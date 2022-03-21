@@ -176,7 +176,7 @@ function moveToAngle(m: Model.Move): number {
   const angle = Math.PI / 2;
   switch (m) {
     case M.U: case M.D_: case M.R: case M.L_:
-    case M.F: case M.B:
+    case M.F: case M.B_:
     case M.Y: case M.X: case M.Z: return -angle;
     default: return angle;
   }

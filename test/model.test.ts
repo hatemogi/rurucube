@@ -44,16 +44,18 @@ test('move 4 times result in same cube', () => {
 });
 
 test('moving *_ after * results same cube', () => {
-  expectNoChange(move(Move.U, Move.U_));
+  expectNoChange(move(Move.U,  Move.U_));
   expectNoChange(move(Move.U_, Move.U));
-  expectNoChange(move(Move.R, Move.R_));
+  expectNoChange(move(Move.R,  Move.R_));
   expectNoChange(move(Move.R_, Move.R));
-  expectNoChange(move(Move.L, Move.L_));
+  expectNoChange(move(Move.L,  Move.L_));
   expectNoChange(move(Move.L_, Move.L));
-  expectNoChange(move(Move.F, Move.F_));
+  expectNoChange(move(Move.F,  Move.F_));
   expectNoChange(move(Move.F_, Move.F));
-  expectNoChange(move(Move.D, Move.D_));
+  expectNoChange(move(Move.D,  Move.D_));
   expectNoChange(move(Move.D_, Move.D));
+  expectNoChange(move(Move.B,  Move.B_));
+  expectNoChange(move(Move.B_, Move.B));
   expectNoChange(move(Move.X_, Move.X));
   expectNoChange(move(Move.Y_, Move.Y));
   expectNoChange(move(Move.Z_, Move.Z));
