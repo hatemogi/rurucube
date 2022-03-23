@@ -9,6 +9,7 @@ const app = Elm.Main.init({ node: mountNode });
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio( window.devicePixelRatio );
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -22,53 +23,45 @@ controls.maxDistance = 30;
 const CELL_SIZE = 2;
 const CELL_DISTANCE = CELL_SIZE * 1.03
 
-function repositionCubeMeshes(meshes: THREE.Mesh[]): THREE.Mesh[] {
-  meshes.forEach((mesh, i) => {
-    const z = Math.floor(i / 9);
-    const xy = Math.floor(i % 9);
-    const y = Math.floor(xy / 3);
-    const x = xy % 3;
-    mesh.position.set((x-1) * CELL_DISTANCE, (y-1) * CELL_DISTANCE, -(z-1) * CELL_DISTANCE);
-    mesh.rotation.set(0, 0, 0);
-  });
-  return meshes;
-}
 
 // https://colorswall.com/palette/171
 const [red, green, blue, orange, yellow, white, grey] = [
-  // 0xFF0000, 0x00FF00, 0x0000FF,
-  // 0xFA8128, 0xFFFF00, 0xFFFFFF, 0x222222
   0xb71234, 0x009b48, 0x0046ad,
   0xff5800, 0xffd500, 0xffffff, 0x222222
 ].map(color => new THREE.MeshPhongMaterial({ color }));
 
-function cubeToMeshes(cube: Model.Cube): THREE.Mesh[] {
+const materialTable: THREE.MeshPhongMaterial[] = (function() {
+  const table = [];
   const C = Model.FaceColor;
-  const color = (color: Model.FaceColor) => {
-    if (color === C.WHITE) return white;
-    else if (color === C.YELLOW) return yellow;
-    else if (color === C.GREEN) return green;
-    else if (color === C.BLUE) return blue;
-    else if (color === C.RED) return red;
-    else if (color === C.ORANGE) return orange;
-  }
-  const {front, back, up, down, left, right} = cube;
+  table[C.WHITE]  = white;
+  table[C.YELLOW] = yellow;
+  table[C.BLUE]   = blue;
+  table[C.GREEN]  = green;
+  table[C.RED]    = red;
+  table[C.ORANGE] = orange;
+  table[C.NONE]   = grey;
+  return table;
+})();
+
+function cubeToMeshes({front, back, up, down, left, right}: Model.Cube): THREE.Mesh[] {
   return [0, 1, 2].flatMap(z => [0, 1, 2].flatMap(y => [0, 1, 2].map(x => {
     // z = 0 -> 앞쪽.
     // z = 2 -> 뒷쪽
-    const frontColor = (z == 0) ? color(front[x + y * 3]) : grey;
-    const backColor  = (z == 2) ? color(back[(2 - x) + y * 3]) : grey;
-    const upColor    = (y == 2) ? color(up[x + z * 3]) : grey;
-    const downColor  = (y == 0) ? color(down[x + (2 - z) * 3]) : grey;
-    const leftColor  = (x == 0) ? color(left[(2 - z) + y * 3]) : grey;
-    const rightColor = (x == 2) ? color(right[z + y * 3]) : grey;
 
     const geometry = new THREE.BoxGeometry(CELL_SIZE, CELL_SIZE, CELL_SIZE);
-    // meterial 순서 => [right, left, up, down, front, back]
 
+    const grey = Model.FaceColor.NONE;
+    const M = materialTable;
     const materials = [
-      rightColor, leftColor, upColor, downColor, frontColor, backColor
+      // meterial 순서 => [right, left, up, down, front, back]
+      M[ x == 2 ? right[z + y*3    ] : grey ],
+      M[ x == 0 ? left [(2-z) + y*3] : grey ],
+      M[ y == 2 ? up   [x + z*3    ] : grey ],
+      M[ y == 0 ? down [x + (2-z)*3] : grey ],
+      M[ z == 0 ? front[x + y*3    ] : grey ],
+      M[ z == 2 ? back [(2-x) + y*3] : grey ]
     ];
+
     const mesh = new THREE.Mesh(geometry, materials);
     mesh.position.set((x-1) * CELL_DISTANCE, (y-1) * CELL_DISTANCE, -(z-1) * CELL_DISTANCE);
     return mesh;
@@ -78,9 +71,6 @@ function cubeToMeshes(cube: Model.Cube): THREE.Mesh[] {
 var cube = Model.defaultCube;
 var meshes = cubeToMeshes(cube);
 scene.add.apply(scene, meshes);
-// cubes.forEach(cube => scene.add(cube));
-
-// scene.remove.apply(scene, cubes);
 
 const rotX: (theta: number) => THREE.Matrix4 = theta => new THREE.Matrix4().makeRotationX(theta);
 const rotY: (theta: number) => THREE.Matrix4 = theta => new THREE.Matrix4().makeRotationY(theta);
@@ -211,7 +201,7 @@ function doAnimation(t: FrameTime) {
       // not started yet
       animation.startAt = t;
       animation.processedUntil = t;
-      animation.endAt = t + duration;
+      animation.endAt = t + (duration / (animationQueue.length * animationQueue.length));
     } else if (t <= animation.endAt) {
       // should be during animation
       animation.onTime(t, animation);
@@ -225,10 +215,10 @@ function doAnimation(t: FrameTime) {
 }
 
 window.onkeydown = (ev: KeyboardEvent) => {
-  console.log('keydown', ev.code, ev.ctrlKey, ev.timeStamp);
+  console.log('keydown', ev.code, ev.shiftKey, ev.timeStamp);
   const M = Model.Move;
   const t = ev.timeStamp;
-  const prime = ev.ctrlKey;
+  const prime = ev.shiftKey;
   switch (ev.code) {
     case "KeyU": move(prime ? M.U_ : M.U, t); break;
     case "KeyL": move(prime ? M.L_ : M.L, t); break;
@@ -254,5 +244,4 @@ function animate(time: number) {
   renderer.render(scene, camera);
 }
 
-renderer.setPixelRatio( window.devicePixelRatio );
 requestAnimationFrame(animate);
