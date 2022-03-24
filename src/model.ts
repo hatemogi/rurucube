@@ -169,7 +169,7 @@ function moveZ({front, back, up, down, left, right}: Cube): Cube {
   };
 }
 
-const repeat = (count: number) => (f: CubeFunc) => (c: Cube) => {
+const iterate = (count: number) => (f: CubeFunc) => (c: Cube) => {
   let result: Cube = c;
   while (--count >= 0) result = f(result);
   return result;
@@ -177,7 +177,7 @@ const repeat = (count: number) => (f: CubeFunc) => (c: Cube) => {
 
 const moveOne: (m: Move) => CubeFunc =
   ({slice, prime}) => {
-    const P = repeat(prime ? 3 : 1);
+    const P = iterate(prime ? 3 : 1);
     switch (slice) {
       case Slice.U : return P(moveU);
       case Slice.R : return P(moveR);

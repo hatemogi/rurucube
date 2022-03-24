@@ -122,14 +122,42 @@ const layers: Layer[] = [
   allMeshes,
 ];
 
-function rotateLayer(layerIndex: number, theta: number) {
+function moveToLayer({slice}: M.Move): number {
+  const S = M.Slice;
+  switch (slice) {
+    case S.U: return 8;
+    case S.D: return 10;
+    case S.R: return 6;
+    case S.L: return 4;
+    case S.F: return 0;
+    case S.B: return 2;
+    case S.X: return 7;
+    case S.Y: return 11;
+    case S.Z: return 3;
+  }
+}
+
+function moveToAngle({slice, prime}: M.Move): number {
+  const angle = Math.PI / 2;
+  const S = M.Slice;
+  switch (slice) {
+    case S.U: case S.R: case S.F: case S.Y: case S.X: case S.Z:
+      return prime ? angle : -angle;
+    default:
+      return prime ? -angle : angle;
+  }
+}
+
+function rotate(m: M.Move, percent: number) {
+  const layer = moveToLayer(m);
+  const angle = moveToAngle(m);
   const matrix = (theta: number) => {
-    if (layerIndex < 4) return rotZ(theta);
-    else if (layerIndex < 8) return rotX(theta);
+    if (layer < 4) return rotZ(theta);
+    else if (layer < 8) return rotX(theta);
     else return rotY(theta);
   }
-  const m = matrix(theta);
-  layers[layerIndex].forEach(i => meshes[i].applyMatrix4(m));
+  const mat = matrix(angle * percent);
+  layers[layer].forEach(i => meshes[i].applyMatrix4(mat));
 }
 
 function render() {
@@ -137,4 +165,4 @@ function render() {
   renderer.render(scene, camera);
 }
 
-export { initCubes, resetCubes, rotateLayer, setCameraPosition, render };
+export { initCubes, resetCubes, rotate, setCameraPosition, render };

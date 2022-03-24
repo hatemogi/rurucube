@@ -14,39 +14,11 @@ type AnimationCommand = {
 
 const animationQueue: AnimationCommand[] = [];
 
-function moveToLayer({slice}: M.Move): number {
-  const S = M.Slice;
-  switch (slice) {
-    case S.U: return 8;
-    case S.D: return 10;
-    case S.R: return 6;
-    case S.L: return 4;
-    case S.F: return 0;
-    case S.B: return 2;
-    case S.X: return 7;
-    case S.Y: return 11;
-    case S.Z: return 3;
-  }
-}
-
-function moveToAngle({slice, prime}: M.Move): number {
-  const angle = Math.PI / 2;
-  const S = M.Slice;
-  switch (slice) {
-    case S.U: case S.R: case S.F: case S.Y: case S.X: case S.Z:
-      return prime ? angle : -angle;
-    default:
-      return prime ? -angle : angle;
-  }
-}
-
 var cube: M.Cube = V.initCubes(M.defaultCube);
 
 function move(m: M.Move) {
   commandHistory.push(m);
   console.log("history", commandHistory);
-  const layer = moveToLayer(m);
-  const angle = moveToAngle(m);
   animationQueue.push({
     startAt: 0,
     processedUntil: 0,
@@ -54,7 +26,7 @@ function move(m: M.Move) {
     onTime: (t, animation) => {
       const dt = t - animation.processedUntil;
       const duration = animation.endAt - animation.startAt;
-      V.rotateLayer(layer, angle * (dt / duration));
+      V.rotate(m, dt / duration);
     },
     onFinish: t => {
       cube = V.resetCubes(M.move(m)(cube));
