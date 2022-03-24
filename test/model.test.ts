@@ -1,4 +1,4 @@
-import { Cube, eqCube, defaultCube, move, Move, FaceColor, oppositeColor, allMoves } from '../src/model';
+import { Cube, eqCube, defaultCube, move, Move, FaceColor, Face, oppositeColor, allMoves } from '../src/model';
 
 const [W, B, O, Y, G, R] = [
   FaceColor.WHITE,  FaceColor.BLUE,  FaceColor.ORANGE,
@@ -39,6 +39,19 @@ test('어떻게 이동해도 가운데 조각은 서로 반대색', () => {
     expectOppositeColor(front[center],  back[center]);
     expectOppositeColor( left[center], right[center]);
     expectOppositeColor(   up[center],  down[center]);
+  });
+});
+
+test('어떻게 이동해도 한 색상은 9조각씩 있다', () => {
+  allMoves.forEach(m => {
+    const { front, back, up, down, left, right } = move(m)(testCube);
+    const count = (color: FaceColor, face: Face) =>
+      face.filter((c: FaceColor) => c == color).length;
+    const countAll = (color: FaceColor) =>
+      count(color, front) + count(color, back) +
+      count(color, left)  + count(color, right) +
+      count(color, up)    + count(color, down);
+    [W, Y, R, O, B, G].forEach(color => expect(countAll(color)).toBe(9));
   });
 })
 
