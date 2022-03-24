@@ -1,4 +1,4 @@
-import { Cube, eqCube, defaultCube, move, Move, FaceColor } from '../src/model';
+import { Cube, eqCube, defaultCube, move, Move, FaceColor, oppositeColor, allMoves } from '../src/model';
 
 const [W, B, O, Y, G, R] = [
   FaceColor.WHITE,  FaceColor.BLUE,  FaceColor.ORANGE,
@@ -21,22 +21,37 @@ function expectNoChange(fn: ((c: Cube) => Cube)) {
   expect(eqCube(testCube, fn(testCube))).toBe(true);
 }
 
-test('cube equality', () => {
+test('반대 색상', () => {
+  expect(oppositeColor(W)).toBe(Y);
+  expect(oppositeColor(Y)).toBe(W);
+  expect(oppositeColor(G)).toBe(B);
+  expect(oppositeColor(B)).toBe(G);
+  expect(oppositeColor(R)).toBe(O);
+  expect(oppositeColor(O)).toBe(R);
+});
+
+test('어떻게 이동해도 가운데 조각은 서로 반대색', () => {
+  const expectOppositeColor = (given: FaceColor, expected: FaceColor) =>
+    expect(oppositeColor(given)).toBe(expected);
+  allMoves.forEach(m => {
+    const {front, back, up, down, left, right} = move(m)(testCube);
+    const center = 4;
+    expectOppositeColor(front[center],  back[center]);
+    expectOppositeColor( left[center], right[center]);
+    expectOppositeColor(   up[center],  down[center]);
+  });
+})
+
+test('같은 큐브 비교', () => {
   expect(eqCube(defaultCube, defaultCube)).toBe(true);
   expect(eqCube(defaultCube, testCube)).toBe(false);
 });
 
-test('move 4 times result in same cube', () => {
-  [Move.U, Move.U_, Move.R, Move.R_, Move.L, Move.L_,
-   Move.F, Move.F_, Move.D, Move.D_, Move.B, Move.B_,
-   Move.X, Move.X_, Move.Y, Move.Y_, Move.Z, Move.Z_
-  ].forEach(m => {
-    const move4 = move(m, m, m, m);
-    expectNoChange(move4);
-  });
+test('같은 회전을 4번 하면 원래 상태로', () => {
+  allMoves.forEach(m => expectNoChange(move(m, m, m, m)));
 });
 
-test('moving *_ after * results same cube', () => {
+test('시계 방향 회전과 반시계 방향 회전을 둘 다 하면 원래 상태로', () => {
   [[Move.U, Move.U_], [Move.R, Move.R_], [Move.L, Move.L_],
    [Move.F, Move.F_], [Move.D, Move.D_], [Move.B, Move.B_],
    [Move.X, Move.X_], [Move.Y, Move.Y_], [Move.Z, Move.Z_]
@@ -46,7 +61,7 @@ test('moving *_ after * results same cube', () => {
   });
 });
 
-test('moving R-pattern 6 times results same cube', () => {
+test("RUR'U' 패턴을 6번 하면 원래 상태로", () => {
   const rpattern = [Move.R, Move.U, Move.R_, Move.U_];
   const rpattern2 = rpattern.concat(rpattern);
   const rpattern6 = rpattern2.concat(rpattern2).concat(rpattern2);

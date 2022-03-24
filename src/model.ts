@@ -44,6 +44,18 @@ enum Move {
   X, X_, Y, Y_, Z, Z_
 };
 
+const allMoves: Move[] = [
+  Move.U, Move.U_,
+  Move.D, Move.D_,
+  Move.L, Move.L_,
+  Move.R, Move.R_,
+  Move.F, Move.F_,
+  Move.B, Move.B_,
+  Move.X, Move.X_,
+  Move.Y, Move.Y_,
+  Move.Z, Move.Z_,
+];
+
 const eqFace = (f1: Face, f2: Face) =>
   f1.join() === f2.join();
 
@@ -204,4 +216,4 @@ function move(...sequence: Move[]): CubeFunc {
   return (initialCube: Cube) => sequence.reduce((cube, m) => moveOne(m)(cube), initialCube);
 }
 
-export { FaceColor, Face, Cube, defaultCube, Move, move, eqCube };
+export { FaceColor, Face, Cube, defaultCube, Move, allMoves, move, eqCube, oppositeColor };
