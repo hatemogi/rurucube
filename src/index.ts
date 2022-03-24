@@ -136,7 +136,6 @@ const commandHistory: Model.Move[] = [];
 
 type FrameTime = number;
 type AnimationCommand = {
-  requestAt: FrameTime;
   startAt: FrameTime;
   endAt: FrameTime;
   processedUntil: FrameTime;
@@ -172,13 +171,12 @@ function moveToAngle({slice, prime}: Model.Move): number {
   }
 }
 
-function move(m: Model.Move, t: FrameTime) {
+function move(m: Model.Move) {
   commandHistory.push(m);
   console.log("history", commandHistory);
   const layer = moveToLayer(m);
   const angle = moveToAngle(m);
   animationQueue.push({
-    requestAt: t,
     startAt: 0,
     processedUntil: 0,
     endAt: 0,
@@ -217,18 +215,18 @@ function doAnimation(t: FrameTime) {
 window.onkeydown = (ev: KeyboardEvent) => {
   console.log('keydown', ev.code, ev.shiftKey, ev.timeStamp);
   const S = Model.Slice;
-  const t = ev.timeStamp;
   const prime = ev.shiftKey;
+  const moveSlice = (slice: Model.Slice) => move({ slice, prime });
   switch (ev.code) {
-    case "KeyU": move({slice: S.U, prime}, t); break;
-    case "KeyL": move({slice: S.L, prime}, t); break;
-    case "KeyR": move({slice: S.R, prime}, t); break;
-    case "KeyF": move({slice: S.F, prime}, t); break;
-    case "KeyB": move({slice: S.B, prime}, t); break;
-    case "KeyD": move({slice: S.D, prime}, t); break;
-    case "KeyX": move({slice: S.X, prime}, t); break;
-    case "KeyY": move({slice: S.Y, prime}, t); break;
-    case "KeyZ": move({slice: S.Z, prime}, t); break;
+    case "KeyU": moveSlice(S.U); break;
+    case "KeyL": moveSlice(S.L); break;
+    case "KeyR": moveSlice(S.R); break;
+    case "KeyF": moveSlice(S.F); break;
+    case "KeyB": moveSlice(S.B); break;
+    case "KeyD": moveSlice(S.D); break;
+    case "KeyX": moveSlice(S.X); break;
+    case "KeyY": moveSlice(S.Y); break;
+    case "KeyZ": moveSlice(S.Z); break;
     case "Space": setCameraPosition(); break;
     case "Escape": resetCubes(Model.defaultCube); break;
   }
