@@ -1,11 +1,8 @@
-const { Elm } = require('./Main.elm');
 import * as THREE from 'three';
 import * as Model from './model';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 const mountNode = document.getElementById('elm-app');
-
-const app = Elm.Main.init({ node: mountNode });
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
