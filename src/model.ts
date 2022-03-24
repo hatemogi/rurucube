@@ -4,6 +4,11 @@ enum FaceColor {
 
 type Face = FaceColor[];
 
+function oppositeColor(color: FaceColor): FaceColor {
+  if (color === FaceColor.NONE) return FaceColor.NONE;
+  return (color % 2) * -2 + color + 1;
+}
+
 enum FaceIndex {
   DL, D, DR,
   L, C, R,
@@ -19,10 +24,9 @@ type Cube = {
   right : Face
 };
 
-const [W, Y, B, G, R, O, None] = [
+const [W, Y, B, G, R, O] = [
   FaceColor.WHITE, FaceColor.YELLOW, FaceColor.BLUE,
-  FaceColor.GREEN, FaceColor.RED,    FaceColor.ORANGE,
-  FaceColor.NONE
+  FaceColor.GREEN, FaceColor.RED,    FaceColor.ORANGE
 ];
 
 const defaultCube: Cube = {
@@ -68,131 +72,108 @@ function reorderFace(from: (n: number) => number): ((face: Face) => Face) {
 }
 
 const clockwiseF = (x: number) => (7 * x + 6) % 10;
-const counterClockwiseF = (x: number) => (3 * x + 2) % 10;
+const counterclockwiseF = (x: number) => (3 * x + 2) % 10;
 const halfTurnF = (x: number) => 8 - x;
 
 const clockwise = reorderFace(clockwiseF);
-const counterClockwise = reorderFace(counterClockwiseF);
+const counterclockwise = reorderFace(counterclockwiseF);
 const halfTurn = reorderFace(halfTurnF);
 
-function moveU(prime: boolean): CubeFunc {
-  return ({front, back, up, down, left, right}) => {
-    return {
-      front: copyFace(prime ? left : right, front, [6,7,8]),
-      back : copyFace(prime ? right : left, back,  [6,7,8]),
-      up   : (prime ? counterClockwise : clockwise)(up),
-      down,
-      left: copyFace(prime ? back : front,  left,  [6,7,8]),
-      right: copyFace(prime ? front: back,  right, [6,7,8])
-    }
-  }
+function curry<A, B, C>(f: (a: A, b: B) => C): (a: A) => (b: B) => C {
+  return (a: A) => (b: B) => f(a, b);
 }
 
-function moveR(prime: boolean): CubeFunc {
-  return ({front, back, up, down, left, right}) => {
-    const turnedBack = halfTurn(back);
-    return {
-      front: copyFace(prime ? up : down,                     front, [2,5,8]),
-      back : copyFace(prime ? halfTurn(down) : halfTurn(up), back,  [0,3,6]),
-      up   : copyFace(prime ? turnedBack : front,            up,    [2,5,8]),
-      down : copyFace(prime ? front : turnedBack,            down,  [2,5,8]),
-      left,
-      right : (prime ? counterClockwise : clockwise)(right),
-    }
-  }
-}
+type MoveFunc = (prime: boolean) => (cube: Cube) => Cube;
 
-function moveL(prime: boolean): CubeFunc {
-  return ({front, back, up, down, left, right}) => {
-    const turnedBack = halfTurn(back);
-    return {
-      front: copyFace(prime ? down : up,                     front, [0,3,6]),
-      back : copyFace(prime ? halfTurn(up) : halfTurn(down), back,  [2,5,8]),
-      up   : copyFace(prime ? front : turnedBack,            up,    [0,3,6]),
-      down : copyFace(prime ? turnedBack : front,            down,  [0,3,6]),
-      left : (prime ? counterClockwise : clockwise)(left),
-      right,
-    }
-  }
-}
+const moveU: MoveFunc = (prime: boolean) =>
+  ({front, back, up, down, left, right}) => ({
+    front: copyFace(prime ? left : right, front, [6,7,8]),
+    back : copyFace(prime ? right : left, back,  [6,7,8]),
+    up   : (prime ? counterclockwise : clockwise)(up),
+    down,
+    left: copyFace(prime ? back : front,  left,  [6,7,8]),
+    right: copyFace(prime ? front: back,  right, [6,7,8])
+  });
 
-function moveF(prime: boolean): CubeFunc {
-  return ({front, back, up, down, left, right}) => {
-    return {
-      front: (prime ? counterClockwise : clockwise)(front),
-      back,
-      up   : copyFace(prime ? counterClockwise(right) : clockwise(left),  up,    [0,1,2]),
-      down : copyFace(prime ? counterClockwise(left)  : clockwise(right), down,  [6,7,8]),
-      left : copyFace(prime ? counterClockwise(up)    : clockwise(down),  left,  [2,5,8]),
-      right: copyFace(prime ? counterClockwise(down)  : clockwise(up),    right, [0,3,6]),
-    }
-  }
-}
+const moveR: MoveFunc = (prime: boolean) =>
+  ({front, back, up, down, left, right}) => ({
+    front: copyFace(prime ? up : down,                     front, [2,5,8]),
+    back : copyFace(prime ? halfTurn(down) : halfTurn(up), back,  [0,3,6]),
+    up   : copyFace(prime ? halfTurn(back) : front,        up,    [2,5,8]),
+    down : copyFace(prime ? front : halfTurn(back),        down,  [2,5,8]),
+    left,
+    right: (prime ? counterclockwise : clockwise)(right),
+  });
 
-function moveD(prime: boolean): CubeFunc {
-  return ({front, back, up, down, left, right}) => {
-    return {
-      front: copyFace(prime ? right : left, front, [0,1,2]),
-      back : copyFace(prime ? left : right, back,  [0,1,2]),
-      up,
-      down : (prime ? counterClockwise : clockwise)(down),
-      left : copyFace(prime ? front : back, left,  [0,1,2]),
-      right: copyFace(prime ? back : front, right, [0,1,2]),
-    }
-  }
-}
+const moveL: MoveFunc = (prime: boolean) =>
+  ({front, back, up, down, left, right}) => ({
+    front: copyFace(prime ? down : up,                     front, [0,3,6]),
+    back : copyFace(prime ? halfTurn(up) : halfTurn(down), back,  [2,5,8]),
+    up   : copyFace(prime ? front : halfTurn(back),        up,    [0,3,6]),
+    down : copyFace(prime ? halfTurn(back) : front,        down,  [0,3,6]),
+    left : (prime ? counterclockwise : clockwise)(left),
+    right,
+  });
 
-function moveB(prime: boolean): CubeFunc {
-  return ({front, back, up, down, left, right}) => {
-    return {
-      front,
-      back : (prime ? counterClockwise : clockwise)(back),
-      up   : copyFace(prime ? clockwise(left) : counterClockwise(right), up,    [6,7,8]),
-      down : copyFace(prime ? clockwise(right): counterClockwise(left),  down,  [0,1,2]),
-      left : copyFace(prime ? clockwise(down) : counterClockwise(up),    left,  [0,3,6]),
-      right: copyFace(prime ? clockwise(up)   : counterClockwise(down),  right, [2,5,8]),
-    }
-  }
-}
+const moveF: MoveFunc = (prime: boolean) =>
+  ({front, back, up, down, left, right}) => ({
+    front: (prime ? counterclockwise : clockwise)(front),
+    back,
+    up   : copyFace(prime ? counterclockwise(right) : clockwise(left),  up,    [0,1,2]),
+    down : copyFace(prime ? counterclockwise(left)  : clockwise(right), down,  [6,7,8]),
+    left : copyFace(prime ? counterclockwise(up)    : clockwise(down),  left,  [2,5,8]),
+    right: copyFace(prime ? counterclockwise(down)  : clockwise(up),    right, [0,3,6]),
+  });
 
-function moveX(prime: boolean): CubeFunc {
-  return ({front, back, up, down, left, right}) => {
-    return {
-      front: prime ? up : down,
-      back : prime ? down : up,
-      up   : prime ? back : front,
-      down : prime ? front : back,
-      left : (prime ? clockwise : counterClockwise)(left),
-      right: (prime ? counterClockwise : clockwise)(right)
-    }
-  }
-}
+const moveD: MoveFunc = (prime: boolean) =>
+  ({front, back, up, down, left, right}) => ({
+    front: copyFace(prime ? right : left, front, [0,1,2]),
+    back : copyFace(prime ? left : right, back,  [0,1,2]),
+    up,
+    down : (prime ? counterclockwise : clockwise)(down),
+    left : copyFace(prime ? front : back, left,  [0,1,2]),
+    right: copyFace(prime ? back : front, right, [0,1,2]),
+  });
 
-function moveY(prime: boolean): CubeFunc {
-  return ({front, back, up, down, left, right}) => {
-    return {
-      front: prime ? left : right,
-      back : prime ? right : left,
-      up   : (prime ? counterClockwise : clockwise)(up),
-      down : (prime ? clockwise : counterClockwise)(down),
-      left : prime ? back : front,
-      right: prime ? front : back
-    }
-  }
-}
+const moveB: MoveFunc = (prime: boolean) =>
+  ({front, back, up, down, left, right}) => ({
+    front,
+    back : (prime ? counterclockwise : clockwise)(back),
+    up   : copyFace(prime ? clockwise(left) : counterclockwise(right), up,    [6,7,8]),
+    down : copyFace(prime ? clockwise(right): counterclockwise(left),  down,  [0,1,2]),
+    left : copyFace(prime ? clockwise(down) : counterclockwise(up),    left,  [0,3,6]),
+    right: copyFace(prime ? clockwise(up)   : counterclockwise(down),  right, [2,5,8]),
+  });
 
-function moveZ(prime: boolean): CubeFunc {
-  return ({front, back, up, down, left, right}) => {
-    return {
-      front: (prime ? counterClockwise : clockwise)(front),
-      back : (prime ? clockwise : counterClockwise)(back),
-      up   : prime ? counterClockwise(right) : clockwise(left),
-      down : prime ? counterClockwise(left)  : clockwise(right),
-      left : prime ? counterClockwise(up)    : clockwise(down),
-      right: prime ? counterClockwise(down)  : clockwise(up)
-    }
-  }
-}
+const moveX: MoveFunc = (prime: boolean) =>
+  ({front, back, up, down, left, right}) => ({
+    front: prime ? up : down,
+    back : prime ? down : up,
+    up   : prime ? back : front,
+    down : prime ? front : back,
+    left : (prime ? clockwise : counterclockwise)(left),
+    right: (prime ? counterclockwise : clockwise)(right)
+  });
+
+const moveY: MoveFunc = (prime: boolean) =>
+  ({front, back, up, down, left, right}) => ({
+    front: prime ? left : right,
+    back : prime ? right : left,
+    up   : (prime ? counterclockwise : clockwise)(up),
+    down : (prime ? clockwise : counterclockwise)(down),
+    left : prime ? back : front,
+    right: prime ? front : back
+  });
+
+const moveZ: MoveFunc = (prime: boolean) =>
+  ({front, back, up, down, left, right}) => ({
+    front: (prime ? counterclockwise : clockwise)(front),
+    back : (prime ? clockwise : counterclockwise)(back),
+    up   : prime ? counterclockwise(right) : clockwise(left),
+    down : prime ? counterclockwise(left)  : clockwise(right),
+    left : prime ? counterclockwise(up)    : clockwise(down),
+    right: prime ? counterclockwise(down)  : clockwise(up)
+  });
 
 const moveOne: (m: Move) => CubeFunc =
   m => {
@@ -216,7 +197,6 @@ const moveOne: (m: Move) => CubeFunc =
       case Move.Y_: return moveY(prime);
       case Move.Z : return moveZ(normal);
       case Move.Z_: return moveZ(prime);
-      default: return moveU(true);
     }
   }
 
