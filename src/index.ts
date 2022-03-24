@@ -146,29 +146,29 @@ type AnimationCommand = {
 
 const animationQueue: AnimationCommand[] = [];
 
-function moveToLayer(m: Model.Move): number {
-  const M = Model.Move;
-  switch (m) {
-    case M.U: case M.U_: return 8;
-    case M.D: case M.D_: return 10;
-    case M.R: case M.R_: return 6;
-    case M.L: case M.L_: return 4;
-    case M.F: case M.F_: return 0;
-    case M.B: case M.B_: return 2;
-    case M.X: case M.X_: return 7;
-    case M.Y: case M.Y_: return 11;
-    case M.Z: case M.Z_: return 3;
+function moveToLayer({slice}: Model.Move): number {
+  const S = Model.Slice;
+  switch (slice) {
+    case S.U: return 8;
+    case S.D: return 10;
+    case S.R: return 6;
+    case S.L: return 4;
+    case S.F: return 0;
+    case S.B: return 2;
+    case S.X: return 7;
+    case S.Y: return 11;
+    case S.Z: return 3;
   }
 }
 
-function moveToAngle(m: Model.Move): number {
-  const M = Model.Move;
+function moveToAngle({slice, prime}: Model.Move): number {
   const angle = Math.PI / 2;
-  switch (m) {
-    case M.U: case M.D_: case M.R: case M.L_:
-    case M.F: case M.B_:
-    case M.Y: case M.X: case M.Z: return -angle;
-    default: return angle;
+  const S = Model.Slice;
+  switch (slice) {
+    case S.U: case S.R: case S.F: case S.Y: case S.X: case S.Z:
+      return prime ? angle : -angle;
+    default:
+      return prime ? -angle : angle;
   }
 }
 
@@ -216,19 +216,19 @@ function doAnimation(t: FrameTime) {
 
 window.onkeydown = (ev: KeyboardEvent) => {
   console.log('keydown', ev.code, ev.shiftKey, ev.timeStamp);
-  const M = Model.Move;
+  const S = Model.Slice;
   const t = ev.timeStamp;
   const prime = ev.shiftKey;
   switch (ev.code) {
-    case "KeyU": move(prime ? M.U_ : M.U, t); break;
-    case "KeyL": move(prime ? M.L_ : M.L, t); break;
-    case "KeyR": move(prime ? M.R_ : M.R, t); break;
-    case "KeyF": move(prime ? M.F_ : M.F, t); break;
-    case "KeyB": move(prime ? M.B_ : M.B, t); break;
-    case "KeyD": move(prime ? M.D_ : M.D, t); break;
-    case "KeyX": move(prime ? M.X_ : M.X, t); break;
-    case "KeyY": move(prime ? M.Y_ : M.Y, t); break;
-    case "KeyZ": move(prime ? M.Z_ : M.Z, t); break;
+    case "KeyU": move({slice: S.U, prime}, t); break;
+    case "KeyL": move({slice: S.L, prime}, t); break;
+    case "KeyR": move({slice: S.R, prime}, t); break;
+    case "KeyF": move({slice: S.F, prime}, t); break;
+    case "KeyB": move({slice: S.B, prime}, t); break;
+    case "KeyD": move({slice: S.D, prime}, t); break;
+    case "KeyX": move({slice: S.X, prime}, t); break;
+    case "KeyY": move({slice: S.Y, prime}, t); break;
+    case "KeyZ": move({slice: S.Z, prime}, t); break;
     case "Space": setCameraPosition(); break;
     case "Escape": resetCubes(Model.defaultCube); break;
   }

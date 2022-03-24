@@ -1,4 +1,4 @@
-import { Cube, eqCube, defaultCube, move, Move, FaceColor, Face, oppositeColor, allMoves } from '../src/model';
+import { Cube, eqCube, defaultCube, move, Move, Slice, FaceColor, Face, oppositeColor, allMoves, allSlices } from '../src/model';
 
 const [W, B, O, Y, G, R] = [
   FaceColor.WHITE,  FaceColor.BLUE,  FaceColor.ORANGE,
@@ -53,7 +53,7 @@ test('어떻게 이동해도 한 색상은 9조각씩 있다', () => {
       count(color, up)    + count(color, down);
     [W, Y, R, O, B, G].forEach(color => expect(countAll(color)).toBe(9));
   });
-})
+});
 
 test('같은 큐브 비교', () => {
   expect(eqCube(defaultCube, defaultCube)).toBe(true);
@@ -65,17 +65,21 @@ test('같은 회전을 4번 하면 원래 상태로', () => {
 });
 
 test('시계 방향 회전과 반시계 방향 회전을 둘 다 하면 원래 상태로', () => {
-  [[Move.U, Move.U_], [Move.R, Move.R_], [Move.L, Move.L_],
-   [Move.F, Move.F_], [Move.D, Move.D_], [Move.B, Move.B_],
-   [Move.X, Move.X_], [Move.Y, Move.Y_], [Move.Z, Move.Z_]
-  ].forEach(([normalM, primeM]) => {
-    expectNoChange(move(normalM, primeM));
-    expectNoChange(move(primeM, normalM));
-  });
+  allSlices.forEach(slice => {
+    const clockwise: Move = { slice, prime: false };
+    const counterclockwise: Move = { slice, prime: true };
+    expectNoChange(move(clockwise, counterclockwise));
+    expectNoChange(move(counterclockwise, clockwise));
+  })
 });
 
 test("RUR'U' 패턴을 6번 하면 원래 상태로", () => {
-  const rpattern = [Move.R, Move.U, Move.R_, Move.U_];
+  const rpattern = [
+    {slice: Slice.R, prime: false},
+    {slice: Slice.U, prime: false},
+    {slice: Slice.R, prime: true},
+    {slice: Slice.U, prime: true},
+  ];
   const rpattern2 = rpattern.concat(rpattern);
   const rpattern6 = rpattern2.concat(rpattern2).concat(rpattern2);
   expectNoChange(move.apply(rpattern6));
