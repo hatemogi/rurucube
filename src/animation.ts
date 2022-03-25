@@ -35,7 +35,7 @@ function doAnimation(view: V.View, t: FrameTime): V.View {
   return newView;
 }
 
-function request(m: M.Move) {
+function animationRequest(m: M.Move) {
   animationQueue.push({
     startAt: 0,
     processedUntil: 0,
@@ -49,4 +49,4 @@ function request(m: M.Move) {
   });
 }
 
-export { doAnimation, request }
+export { animationRequest, doAnimation }

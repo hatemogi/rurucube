@@ -1,6 +1,6 @@
 import * as M from './model';
 import * as V from './view';
-import * as A from './animation';
+import { animationRequest, doAnimation } from './animation';
 
 const commandHistory: M.Move[] = [];
 
@@ -10,7 +10,7 @@ document.body.appendChild(view.element);
 function move(m: M.Move) {
   commandHistory.push(m);
   console.log("history", commandHistory);
-  A.request(m);
+  animationRequest(m);
 }
 
 window.onkeydown = (ev: KeyboardEvent) => {
@@ -36,7 +36,7 @@ window.onkeydown = (ev: KeyboardEvent) => {
 
 function animate(time: number) {
   requestAnimationFrame(animate);
-  V.render(view = A.doAnimation(view, time));
+  V.render(view = doAnimation(view, time));
 }
 
 requestAnimationFrame(animate);
