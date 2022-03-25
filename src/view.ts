@@ -30,7 +30,10 @@ function initView(cube: M.Cube, window: Window): View {
   const meshes = cubeToMeshes(cube);
   scene.add.apply(scene, meshes);
 
-  return { cube, meshes, renderer, scene, camera, controls, element: renderer.domElement };
+  const view = { cube, meshes, renderer, scene, camera, controls, element: renderer.domElement };
+  resetCameraPosition(view);
+
+  return view;
 }
 
 // document.body.appendChild(renderer.domElement);
@@ -49,7 +52,7 @@ light2.position.set(-5, -10, 15);
 
 // scene.add(light1, light2);
 
-function setCameraPosition(view: View) {
+function resetCameraPosition(view: View) {
   view.camera.position.set(8, 8, 10);
   view.camera.lookAt(new THREE.Vector3(0, 0, 0));
 }
@@ -180,4 +183,4 @@ function render({controls, renderer, scene, camera}: View) {
   renderer.render(scene, camera);
 }
 
-export { View, initView, resetCubes, rotate, setCameraPosition, render };
+export { View, initView, resetCubes, rotate, resetCameraPosition, render };

@@ -10,7 +10,7 @@ document.body.appendChild(view.element);
 function move(m: M.Move) {
   commandHistory.push(m);
   console.log("history", commandHistory);
-  A.request(view, m);
+  A.request(m);
 }
 
 window.onkeydown = (ev: KeyboardEvent) => {
@@ -28,18 +28,15 @@ window.onkeydown = (ev: KeyboardEvent) => {
     case "KeyX": moveSlice(S.X); break;
     case "KeyY": moveSlice(S.Y); break;
     case "KeyZ": moveSlice(S.Z); break;
-    case "Space": V.setCameraPosition(view); break;
+    case "Space": V.resetCameraPosition(view); break;
     case "Escape": view = V.resetCubes(view, M.defaultCube); break;
   }
   return '';
 };
 
-V.setCameraPosition(view);
-
 function animate(time: number) {
   requestAnimationFrame(animate);
-  view = A.doAnimation(view, time);
-  V.render(view);
+  V.render(view = A.doAnimation(view, time));
 }
 
 requestAnimationFrame(animate);

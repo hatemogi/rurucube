@@ -6,7 +6,7 @@ type AnimationCommand = {
   startAt: FrameTime;
   endAt: FrameTime;
   processedUntil: FrameTime;
-  onTime: (v: V.View, t: FrameTime, animation: AnimationCommand) => V.View;
+  onFrame:   (v: V.View, t: FrameTime, animation: AnimationCommand) => V.View;
   onFinish: (v: V.View, t: FrameTime) => V.View;
 }
 
@@ -24,7 +24,7 @@ function doAnimation(view: V.View, t: FrameTime): V.View {
       animation.endAt = t + (duration / (animationQueue.length * animationQueue.length));
     } else if (t <= animation.endAt) {
       // should be during animation
-      newView = animation.onTime(view, t, animation);
+      newView = animation.onFrame(view, t, animation);
       animation.processedUntil = t;
     } else {
       // finished
@@ -35,12 +35,12 @@ function doAnimation(view: V.View, t: FrameTime): V.View {
   return newView;
 }
 
-function request(v: V.View, m: M.Move) {
+function request(m: M.Move) {
   animationQueue.push({
     startAt: 0,
     processedUntil: 0,
     endAt: 0,
-    onTime: (view, t, animation) => {
+    onFrame: (view, t, animation) => {
       const dt = t - animation.processedUntil;
       const duration = animation.endAt - animation.startAt;
       return V.rotate(view, m, dt / duration);
