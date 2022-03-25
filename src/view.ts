@@ -2,19 +2,39 @@ import * as THREE from 'three';
 import * as M from './model';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-const renderer = new THREE.WebGLRenderer();
+interface View {
+  readonly cube     : M.Cube,
+  readonly meshes   : THREE.Mesh[],
+  readonly renderer : THREE.WebGLRenderer,
+  readonly element  : HTMLCanvasElement,
+  readonly scene    : THREE.Scene,
+  readonly camera   : THREE.PerspectiveCamera,
+  readonly controls : OrbitControls,
+};
 
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio( window.devicePixelRatio );
-document.body.appendChild(renderer.domElement);
+function initView(cube: M.Cube, window: Window): View {
+  const renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio( window.devicePixelRatio );
 
-const scene = new THREE.Scene();
+  const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 500);
+  const light = new THREE.AmbientLight(0xFfFfFf); // white light
+  scene.add(light);
 
-const controls = new OrbitControls( camera, renderer.domElement );
-controls.minDistance = 10;
-controls.maxDistance = 30;
+  const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 500);
+  const controls = new OrbitControls( camera, renderer.domElement );
+  controls.minDistance = 10;
+  controls.maxDistance = 30;
+
+  const meshes = cubeToMeshes(cube);
+  scene.add.apply(scene, meshes);
+
+  return { cube, meshes, renderer, scene, camera, controls, element: renderer.domElement };
+}
+
+// document.body.appendChild(renderer.domElement);
+
 
 const CELL_SIZE = 2;
 const CELL_DISTANCE = CELL_SIZE * 1.03;
@@ -27,13 +47,11 @@ const light2 = new THREE.HemisphereLight(0xffffff, 0x080820, 1);
 light2.position.set(-5, -10, 15);
 */
 
-const light = new THREE.AmbientLight(0xFfFfFf); // white light
-scene.add(light);
 // scene.add(light1, light2);
 
-function setCameraPosition() {
-  camera.position.set(8, 8, 10);
-  camera.lookAt(new THREE.Vector3(0, 0, 0));
+function setCameraPosition(view: View) {
+  view.camera.position.set(8, 8, 10);
+  view.camera.lookAt(new THREE.Vector3(0, 0, 0));
 }
 
 // https://colorswall.com/palette/171
@@ -80,22 +98,17 @@ function cubeToMeshes({front, back, up, down, left, right}: M.Cube): THREE.Mesh[
   })));
 }
 
-var cube = M.defaultCube;
-var meshes: THREE.Mesh[] = [];
-
-function resetCubes(c: M.Cube): M.Cube {
+function resetCubes(view: View, newCube: M.Cube): View {
+  const { scene, meshes } = view;
   scene.remove.apply(scene, meshes);
   meshes.forEach(m => m.geometry.dispose());
-  cube = c;
-  meshes = cubeToMeshes(cube);
-  scene.add.apply(scene, meshes);
-  return cube;
-}
-
-function initCubes(c: M.Cube): M.Cube {
-  meshes = cubeToMeshes(cube);
-  scene.add.apply(scene, meshes);
-  return cube;
+  const newMeshes = cubeToMeshes(newCube);
+  scene.add.apply(scene, newMeshes);
+  return {
+    ...view,
+    cube: newCube,
+    meshes: newMeshes
+  };
 }
 
 const rotX: (theta: number) => THREE.Matrix4 = theta => new THREE.Matrix4().makeRotationX(theta);
@@ -148,7 +161,8 @@ function moveToAngle({slice, prime}: M.Move): number {
   }
 }
 
-function rotate(m: M.Move, percent: number) {
+function rotate(view: View, m: M.Move, percent: number): View {
+  const {meshes} = view;
   const layer = moveToLayer(m);
   const angle = moveToAngle(m);
   const matrix = (theta: number) => {
@@ -158,11 +172,12 @@ function rotate(m: M.Move, percent: number) {
   }
   const mat = matrix(angle * percent);
   layers[layer].forEach(i => meshes[i].applyMatrix4(mat));
+  return view;
 }
 
-function render() {
+function render({controls, renderer, scene, camera}: View) {
   controls.update();
   renderer.render(scene, camera);
 }
 
-export { initCubes, resetCubes, rotate, setCameraPosition, render };
+export { View, initView, resetCubes, rotate, setCameraPosition, render };

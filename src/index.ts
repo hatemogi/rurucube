@@ -1,58 +1,16 @@
 import * as M from './model';
 import * as V from './view';
+import * as A from './animation';
 
 const commandHistory: M.Move[] = [];
 
-type FrameTime = number;
-type AnimationCommand = {
-  startAt: FrameTime;
-  endAt: FrameTime;
-  processedUntil: FrameTime;
-  onTime: (t: FrameTime, animation: AnimationCommand) => void;
-  onFinish: (t: FrameTime) => void;
-}
-
-const animationQueue: AnimationCommand[] = [];
-
-var cube: M.Cube = V.initCubes(M.defaultCube);
+var view: V.View = V.initView(M.defaultCube, window);
+document.body.appendChild(view.element);
 
 function move(m: M.Move) {
   commandHistory.push(m);
   console.log("history", commandHistory);
-  animationQueue.push({
-    startAt: 0,
-    processedUntil: 0,
-    endAt: 0,
-    onTime: (t, animation) => {
-      const dt = t - animation.processedUntil;
-      const duration = animation.endAt - animation.startAt;
-      V.rotate(m, dt / duration);
-    },
-    onFinish: t => {
-      cube = V.resetCubes(M.move(m)(cube));
-    }
-  });
-}
-
-function doAnimation(t: FrameTime) {
-  const duration = 300; // in milliseconds
-  if (animationQueue.length > 0) {
-    const animation = animationQueue[0];
-    if (animation.startAt <= 0) {
-      // not started yet
-      animation.startAt = t;
-      animation.processedUntil = t;
-      animation.endAt = t + (duration / (animationQueue.length * animationQueue.length));
-    } else if (t <= animation.endAt) {
-      // should be during animation
-      animation.onTime(t, animation);
-      animation.processedUntil = t;
-    } else {
-      // finished
-      animation.onFinish(t);
-      animationQueue.shift();
-    }
-  }
+  A.request(view, m);
 }
 
 window.onkeydown = (ev: KeyboardEvent) => {
@@ -70,18 +28,18 @@ window.onkeydown = (ev: KeyboardEvent) => {
     case "KeyX": moveSlice(S.X); break;
     case "KeyY": moveSlice(S.Y); break;
     case "KeyZ": moveSlice(S.Z); break;
-    case "Space": V.setCameraPosition(); break;
-    case "Escape": cube = V.resetCubes(M.defaultCube); break;
+    case "Space": V.setCameraPosition(view); break;
+    case "Escape": view = V.resetCubes(view, M.defaultCube); break;
   }
   return '';
 };
 
-V.setCameraPosition();
+V.setCameraPosition(view);
 
 function animate(time: number) {
   requestAnimationFrame(animate);
-  doAnimation(time);
-  V.render();
+  view = A.doAnimation(view, time);
+  V.render(view);
 }
 
 requestAnimationFrame(animate);
