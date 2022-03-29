@@ -13,6 +13,14 @@ function move(m: M.Move) {
   animationRequest(m);
 }
 
+function shuffleCubeRequest() {
+  const m = M.allMoves;
+  for (var i = 0; i < 10; i++) {
+    const randomMove = m[Math.floor(Math.random() * m.length)];
+    move(randomMove);
+  }
+}
+
 window.onkeydown = (ev: KeyboardEvent) => {
   console.log('keydown', ev.code, ev.shiftKey, ev.timeStamp);
   const S = M.Slice;
@@ -30,6 +38,7 @@ window.onkeydown = (ev: KeyboardEvent) => {
     case "KeyZ": moveSlice(S.Z); break;
     case "Space": V.resetCameraPosition(view); break;
     case "Escape": view = V.resetCubes(view, M.defaultCube); break;
+    case "Enter": shuffleCubeRequest(); break;
   }
   return '';
 };
